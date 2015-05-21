@@ -1,0 +1,68 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<polymer-element name="rise-rss" attributes="url entries refresh">
+
+  <script>
+    /* global Polymer */
+    /*jshint newcap: false */
+    Polymer("rise-rss", {
+      /**
+       * Fired when a response is received.
+       *
+       * @event rise-rss-response
+       */
+
+      /**
+       * Fired when an error is received.
+       *
+       * @event rise-rss-error
+       */
+
+      /**
+       * The URL of the RSS feed.
+       *
+       * @attribute url
+       * @type string
+       * @default ""
+       */
+      url: "",
+
+      /**
+       * The number of entries to return in the data.
+       *
+       * @attribute entries
+       * @type number
+       * @default 0 (return all entries)
+       */
+      entries: 0,
+
+      /**
+       * The number of minutes before another request will be made.
+       *
+       * @attribute refresh
+       * @type number
+       * @default 0 (no refresh)
+       */
+      refresh: 0,
+
+      /************************************** INITIALIZATION **************************************/
+
+      /**
+       * Polymer has finished its initialization. This is the entry point.
+       */
+      ready: function() {
+
+      },
+
+      /****************************************** COMMON ******************************************/
+
+      /**
+       * Performs a request using gadgets.io.makeRequest.
+       */
+      go: function() {
+
+      }
+
+    });
+  </script>
+</polymer-element>

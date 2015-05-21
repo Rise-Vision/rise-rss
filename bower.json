@@ -1,0 +1,27 @@
+{
+  "name": "rise-rss",
+  "version": "1.0.0",
+  "authors": [
+    "Stuart Lees <stuart.lees@risevision.com>"
+  ],
+  "description": "Rise Vision web component for retrieving RSS feed data",
+  "main": "rise-rss.html",
+  "keywords": [
+    "polymer",
+    "web-components",
+    "rss"
+  ],
+  "license": "GPLv3",
+  "homepage": "https://github.com/Rise-Vision/web-component-rise-rss",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "test"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#0.5.5"
+  },
+  "devDependencies": {
+    "web-component-tester": "~3.1.3"
+  }
+}
