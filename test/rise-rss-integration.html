@@ -12,34 +12,114 @@
 </head>
 <body>
 
-<!-- TODO: test instances -->
+<rise-rss id="request" url="http://feed.xml"></rise-rss>
+
+<script src="data/xml-rss.js"></script>
+<script src="data/json-rss.js"></script>
+<script src="data/xml-atom.js"></script>
+<script src="data/json-atom.js"></script>
+<script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
+<script src="mocks/makeRequest.js"></script>
 
 <script>
   suite("rise-rss", function() {
-    var xhr, clock, requests;
+    var clock, responded, listener,
+      rssRequest = document.querySelector("#request");
 
     // Runs for every suite.
     suiteSetup(function() {
-      xhr = sinon.useFakeXMLHttpRequest();
-
-      xhr.onCreate = function (xhr) {
-        requests.push(xhr);
-      };
-
       clock = sinon.useFakeTimers();
     });
 
     suiteTeardown(function() {
-      xhr.restore();
       clock.restore();
     });
 
     // Runs for every test.
     setup(function() {
-      requests = [];
+      xml = xmlRSS; // default
+      responded = false;
     });
 
-    // TODO: test suites
+    suite("response object", function() {
+
+      test("should receive a JavaScript object representation of an RSS 2.0 feed", function(done) {
+        listener = function(response) {
+          responded = true;
+
+          assert.property(response.detail, "feed", "feed property exists");
+          assert.isObject(response.detail.feed, "feed property is an object");
+          assert.deepEqual(response.detail.feed, jsonRSS, "feed property value equals RSS response object");
+
+          rssRequest.removeEventListener("rise-rss-response", listener);
+        };
+
+        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest.go();
+
+        assert.isTrue(responded);
+        done();
+      });
+
+      test("should receive a JavaScript object representation of an Atom feed", function(done) {
+        // use an Atom feed in this test
+        xml = xmlAtom;
+
+        listener = function(response) {
+          responded = true;
+
+          assert.property(response.detail, "feed", "feed property exists");
+          assert.isObject(response.detail.feed, "feed property is an object");
+          assert.deepEqual(response.detail.feed, jsonAtom, "feed property value equals Atom response object");
+
+          rssRequest.removeEventListener("rise-rss-response", listener);
+        };
+
+        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest.go();
+
+        assert.isTrue(responded);
+        done();
+      });
+
+    });
+
+    suite("entries", function() {
+
+      test("should return all entries in feed", function(done) {
+        listener = function(response) {
+          responded = true;
+
+          assert.equal(response.detail.feed.items.length, jsonRSS.items.length);
+
+          rssRequest.removeEventListener("rise-rss-response", listener);
+        };
+
+        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest.go();
+
+        assert.isTrue(responded);
+        done();
+      });
+
+      test("should limit number of entries in feed to 2", function(done) {
+        listener = function(response) {
+          responded = true;
+
+          assert.equal(response.detail.feed.items.length, 2);
+
+          rssRequest.removeEventListener("rise-rss-response", listener);
+        };
+
+        rssRequest.entries = 2;
+        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest.go();
+
+        assert.isTrue(responded);
+        done();
+      });
+
+    });
 
 
   });

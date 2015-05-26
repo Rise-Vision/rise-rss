@@ -12,11 +12,17 @@
 </head>
 <body>
 
-<!-- TODO: test instances -->
+<rise-rss id="request" url="http://feed.xml"></rise-rss>
+
+<script src="data/xml-rss.js"></script>
+<script src="data/json-rss.js"></script>
+<script src="data/xml-atom.js"></script>
+<script src="data/json-atom.js"></script>
 
 <script>
   suite("rise-rss", function() {
-    var clock;
+    var clock, responded, listener,
+      rssRequest = document.querySelector("#request");
 
     suiteSetup(function() {
       clock = sinon.useFakeTimers();
@@ -27,11 +33,128 @@
     });
 
     setup(function() {
+      responded = false;
+    });
+
+    suite("_handleRequestError", function() {
+      test("should fire rise-rss-error if there is a problem with the gadgets.io.makeRequest response", function(done) {
+        var errors = [
+            "500 Failed ..."
+          ],
+          listener = function(response) {
+            responded = true;
+
+            assert.isArray(response.detail);
+
+            rssRequest.removeEventListener("rise-storage-error", listener);
+          };
+
+        rssRequest.addEventListener("rise-rss-error", listener);
+        rssRequest._handleRequestError(errors);
+
+        assert.isTrue(responded);
+
+        done();
+      });
+    });
+
+    suite("_handleRequestSuccess", function() {
+      test("should fire rise-rss-response and provide a Javascript object representation of a feed", function(done) {
+
+        listener = function(response) {
+          responded = true;
+
+          assert.isObject(response.detail.feed);
+
+          rssRequest.removeEventListener("rise-storage-response", listener);
+        };
+
+        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest._handleRequestSuccess(xmlRSS);
+
+        assert.isTrue(responded);
+        done();
+      });
 
     });
 
-    // TODO: test suites
+    suite("_parseToJSON", function() {
+      var feed;
 
+      test("should return a JavaScript object representation of an RSS 2.0 feed", function() {
+        feed = rssRequest._parseToJSON(xmlRSS);
+
+        assert.isObject(feed);
+        assert.deepEqual(feed, jsonRSS);
+      });
+
+      test("should return a JavaScript object representation of an Atom feed", function() {
+        feed = rssRequest._parseToJSON(xmlAtom);
+
+        assert.isObject(feed);
+        assert.deepEqual(feed, jsonAtom);
+      });
+
+    });
+
+    suite("_prepareResponse", function() {
+      var response;
+
+      test("should return a javascript object with a property named feed, including all entry items", function() {
+        response = rssRequest._prepareResponse(jsonRSS);
+
+        assert.property(response, "feed");
+        assert.isObject(response.feed);
+        assert.equal(response.feed.items.length, jsonRSS.items.length);
+      });
+
+      test("should return only the first 2 entry items of all available entries", function() {
+        rssRequest.entries = 2;
+        response = rssRequest._prepareResponse(jsonRSS);
+
+        assert.equal(response.feed.items.length, 2);
+      });
+
+      test("should return all entry items when entries value higher than feed entries available", function() {
+        rssRequest.entries = 15;
+        response = rssRequest._prepareResponse(jsonRSS);
+
+        assert.equal(response.feed.items.length, jsonRSS.items.length);
+      });
+
+    });
+
+    suite("_startTimer", function() {
+      var timerSpy;
+
+      test("should start a timer", function() {
+        rssRequest.refresh = 10;
+        rssRequest._startTimer();
+        assert.isDefined(rssRequest["___refresh"]);
+      });
+
+      test("should correctly set refresh interval", function() {
+        rssRequest.refresh = 10;
+        rssRequest._startTimer();
+        assert.equal(rssRequest.refresh, 10);
+      });
+
+      test("should enforce a minimum refresh interval", function() {
+        rssRequest.refresh = -1;
+        rssRequest._startTimer();
+        assert.equal(rssRequest.refresh, 1);
+      });
+
+      test("should make a new request for data", function() {
+        timerSpy = sinon.spy(rssRequest, "_makeRequest");
+
+        rssRequest._startTimer();
+
+        clock.tick(60000);
+        assert(timerSpy.calledOnce);
+      });
+
+    });
 
   });
 </script>
