@@ -6,152 +6,142 @@
 
 <script src="../underscore/underscore.js"></script>
 
-<polymer-element name="rise-rss" attributes="url entries refresh">
-
-  <script>
+<script>
+  (function() {
     /* global Polymer, gadgets, RiseVision, _ */
-    /*jshint newcap: false */
+    /* jshint newcap: false */
 
-    (function() {
+    "use strict";
 
-      // Private or static variables
+    Polymer({
+      is: "rise-rss",
 
-      Polymer("rise-rss", {
-        /**
-         * Fired when a response is received.
-         *
-         * @event rise-rss-response
-         */
+      /**
+       * Fired when a response is received.
+       *
+       * @param {object} feed javascript object representation of feed
+       * @event rise-rss-response
+       */
 
-        /**
-         * Fired when an error is received.
-         *
-         * @event rise-rss-error
-         */
+      /**
+       * Fired when an error is received.
+       *
+       * @event rise-rss-error
+       */
+
+      properties: {
 
         /**
          * The URL of the RSS feed.
-         *
-         * @attribute url
-         * @type string
-         * @default ""
          */
-        url: "",
+        url: {
+          type: String,
+          value: ""
+        },
 
         /**
          * The number of entries to return in the data.
-         *
-         * @attribute entries
-         * @type number
-         * @default 0 (return all entries)
          */
-        entries: 0,
+        entries: {
+          type: Number,
+          value: 0
+        },
 
         /**
          * The number of minutes before another request will be made.
-         *
-         * @attribute refresh
-         * @type number
-         * @default 0 (no refresh)
          */
-        refresh: 0,
+        refresh: {
+          type: Number,
+          value: 0
+        }
+      },
 
-        /**
-         * Polymer has finished its initialization. This is the entry point.
-         */
-        ready: function() {
+      _prepareResponse: function(feed) {
+        var response = {},
+          limit;
 
-        },
+        response.feed = feed;
 
-        _prepareResponse: function(feed) {
-          var response = {},
-            limit;
+        this.entries = parseInt(this.entries, 10);
 
-          response.feed = feed;
+        // limit the entries to provide in response
+        if (!isNaN(this.entries) && this.entries > 0) {
+          // ensure feed.items exists
+          if (feed.items && feed.items.length) {
+            // determine value to use for how many items to limit to
+            limit = (feed.items.length >= this.entries) ? this.entries : feed.items.length;
 
-          this.entries = parseInt(this.entries, 10);
-
-          // limit the entries to provide in response
-          if (!isNaN(this.entries) && this.entries > 0) {
-            // ensure feed.items exists
-            if (feed.items && feed.items.length) {
-              // determine value to use for how many items to limit to
-              limit = (feed.items.length >= this.entries) ? this.entries : feed.items.length;
-
-              // revise to include only required entries
-              response.feed.items = _.first(feed.items, limit);
-            }
+            // revise to include only required entries
+            response.feed.items = _.first(feed.items, limit);
           }
-
-          return response;
-        },
-
-        _parseToJSON: function (xml) {
-          var parser = new RiseVision.ModuleExports.FeedMe(true);
-
-          // pass the XML string from the response
-          parser.write(xml);
-
-          // return the JSON parsed object
-          return parser.done();
-        },
-
-        _startTimer: function() {
-          this.refresh = parseInt(this.refresh, 10);
-
-          if (!isNaN(this.refresh) && this.refresh !== 0) {
-            this.refresh = (this.refresh < 1) ? 1 : this.refresh;
-
-            this.job("refresh", function() {
-              this._makeRequest();
-            }, this.refresh * 60000);
-          }
-        },
-
-        _handleRequestError: function (errors) {
-          errors.forEach(function (error) {
-            console.error("RSS Error, gadgets.io.makeRequest: " + error);
-          });
-
-          this._startTimer();
-          this.fire("rise-rss-error", errors);
-        },
-
-        _handleRequestSuccess: function (xml) {
-          var feedJSON = this._parseToJSON(xml);
-
-          this._startTimer();
-          this.fire("rise-rss-response", this._prepareResponse(feedJSON));
-        },
-
-        _makeRequest: function () {
-          var params = {},
-            self = this;
-
-          params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.TEXT;
-
-          gadgets.io.makeRequest(this.url, function(response) {
-            if (response.errors.length > 0) {
-              self._handleRequestError(response.errors);
-            }
-            else {
-              self._handleRequestSuccess(response.data);
-            }
-
-          }, params);
-        },
-
-        /**
-         * Performs a request to obtain the RSS feed
-         *
-         * @method go
-         */
-        go: function() {
-          this._makeRequest();
         }
 
-      });
-    })();
+        return response;
+      },
 
-  </script>
-</polymer-element>
+      _parseToJSON: function (xml) {
+        var parser = new RiseVision.ModuleExports.FeedMe(true);
+
+        // pass the XML string from the response
+        parser.write(xml);
+
+        // return the JSON parsed object
+        return parser.done();
+      },
+
+      _startTimer: function() {
+        this.refresh = parseInt(this.refresh, 10);
+
+        if (!isNaN(this.refresh) && this.refresh !== 0) {
+          this.refresh = (this.refresh < 1) ? 1 : this.refresh;
+
+          // calls _makeRequest() after refresh wait duration
+          this.async(this._makeRequest, this.refresh * 60000);
+        }
+      },
+
+      _handleRequestError: function (errors) {
+        errors.forEach(function (error) {
+          console.error("RSS Error, gadgets.io.makeRequest: " + error);
+        });
+
+        this._startTimer();
+        this.fire("rise-rss-error", errors);
+      },
+
+      _handleRequestSuccess: function (xml) {
+        var feedJSON = this._parseToJSON(xml);
+
+        this._startTimer();
+        this.fire("rise-rss-response", this._prepareResponse(feedJSON));
+      },
+
+      _makeRequest: function () {
+        var params = {},
+          self = this;
+
+        params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.TEXT;
+
+        gadgets.io.makeRequest(this.url, function(response) {
+          if (response.errors.length > 0) {
+            self._handleRequestError(response.errors);
+          }
+          else {
+            self._handleRequestSuccess(response.data);
+          }
+
+        }, params);
+      },
+
+      /**
+       * Performs a request to obtain the RSS feed
+       *
+       * @method go
+       */
+      go: function() {
+        this._makeRequest();
+      }
+
+    });
+  })();
+</script>
