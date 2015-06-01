@@ -19,7 +19,8 @@
     "test"
   ],
   "dependencies": {
-    "polymer": "Polymer/polymer#0.5.5"
+    "polymer": "Polymer/polymer#0.5.5",
+    "underscore": "~1.8.2"
   },
   "devDependencies": {
     "web-component-tester": "~3.1.3"
