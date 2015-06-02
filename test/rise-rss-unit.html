@@ -127,12 +127,6 @@
     suite("_startTimer", function() {
       var timerSpy;
 
-      test("should start a timer", function() {
-        rssRequest.refresh = 10;
-        rssRequest._startTimer();
-        assert.isDefined(rssRequest["___refresh"]);
-      });
-
       test("should correctly set refresh interval", function() {
         rssRequest.refresh = 10;
         rssRequest._startTimer();
