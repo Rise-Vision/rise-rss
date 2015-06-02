@@ -139,6 +139,7 @@ The web component returns a Javascript object with the following format (example
 - [Bower](http://bower.io/)
 - [Gulp](http://gulpjs.com/)
 - [Browserify](http://browserify.org/)
+- [Polyserve](https://www.npmjs.com/package/polyserve)
 - [web-component-tester](https://github.com/Polymer/web-component-tester) for testing
 - [feedme.js](https://github.com/fent/feedme.js) for RSS/Atom parsing 
 
@@ -149,6 +150,7 @@ The web component returns a Javascript object with the following format (example
 * [npm](https://www.npmjs.org/) & [Node.js](http://nodejs.org/) - npm is the default package manager for Node.js. npm runs through the command line and manages dependencies for an application. These dependencies are listed in the _package.json_ file.
 * [Bower](http://bower.io/) - Bower is a package manager for Javascript libraries and frameworks. All third-party Javascript dependencies are listed in the _bower.json_ file.
 * [Gulp](http://gulpjs.com/) - Gulp is a Javascript task runner. It lints, runs unit and E2E (end-to-end) tests, minimizes files, etc. Gulp tasks are defined in _gulpfile.js_.
+* [Polyserve](https://www.npmjs.com/package/polyserve) - A simple web server for using bower components locally.
 
 ### Local Development Environment Setup and Installation
 To make changes to the web component, you'll first need to install the dependencies:
@@ -157,6 +159,7 @@ To make changes to the web component, you'll first need to install the dependenc
 - [Node.js and npm](http://blog.nodeknockout.com/post/65463770933/how-to-install-node-js-and-npm)
 - [Bower](http://bower.io/#install-bower) - To install Bower, run the following command in Terminal: `npm install -g bower`. Should you encounter any errors, try running the following command instead: `sudo npm install -g bower`.
 - [Gulp](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md) - To install Gulp, run the following command in Terminal: `npm install -g gulp`. Should you encounter any errors, try running the following command instead: `sudo npm install -g gulp`.
+- [Polyserve](https://www.npmjs.com/package/polyserve) - To install Polyserve, run the following command in Terminal: `npm install -g polyserve`. Should you encounter any errors, try running the following command instead: `sudo npm install -g polyserve`.
 
 The web components can now be installed by executing the following commands in Terminal:
 ```
@@ -166,13 +169,35 @@ npm install
 bower install
 ```
 
-### Testing
-You can run the suite of tests via a local web server. On Mac, execute the following command from the root directory of the web component:
+### Run Locally
+To access the demo locally, run the following command in Terminal: `polyserve`
+
+Now in your browser, navigate to: 
+
 ```
-python -m SimpleHTTPServer
+localhost:8080/components/rise-rss/demo.html
+``` 
+
+Please note that the demo is purely for demonstrative purposes on how to set up the component. At this time, the standalone demo page will not work as the component requires to be used within Rise Vision [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp) or [Viewer](https://github.com/Rise-Vision/viewer). 
+
+### Testing
+You can run the suite of tests either by command terminal or via a local web server using Polyserve. 
+
+#### Command Terminal
+Execute the following command in Terminal to run tests:
+
+```
+gulp test
 ```
 
-This starts a web server on port 8000, and you can run the tests by navigating to `http://localhost:8000/test/index.html`.
+#### Local Server
+Run the following command in Terminal: `polyserve`.
+
+Now in your browser, navigate to: 
+
+```
+localhost:8080/components/rise-rss/test/index.html
+```
 
 ### Deployment
 Once you are satisifed with your changes, deploy the `components` and `rise-rss` folders to your server. You can then use the web component by following the *Usage* instructions.

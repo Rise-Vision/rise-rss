@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>rise-rss Demo</title>
+
+  <script src="../webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="rise-rss.html">
+
+</head>
+<body unresolved>
+
+<rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="10" refresh="2"></rise-rss>
+
+<script>
+
+  /*
+  NOTE: This is purely for demonstrative purposes on how to set up the component. This standalone demo page will
+  not work as the component requires to be used within Rise Vision Chrome App Player or Viewer.
+   */
+
+  function webComponentsReady() {
+    window.removeEventListener("WebComponentsReady", webComponentsReady);
+
+    var rss = document.querySelector("#rss");
+
+    rss.addEventListener("rise-rss-response", function(e) {
+      console.log(e);
+    });
+
+    rss.go();
+  }
+
+  window.addEventListener("WebComponentsReady", webComponentsReady);
+
+</script>
+
+</body>
+</html>

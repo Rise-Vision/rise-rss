@@ -11,6 +11,8 @@
   var transform = require('vinyl-transform');
   var runSequence = require("run-sequence");
   var wct = require("web-component-tester").gulp.init(gulp);
+  var bower = require("gulp-bower");
+  var del = require("del");
 
   gulp.task("browserify", function () {
     var browserified = transform(function(filename) {
@@ -25,6 +27,10 @@
       .pipe(gulp.dest(""));
   });
 
+  gulp.task("clean-bower", function(cb){
+    del(["./bower_components/**"], cb);
+  });
+
   gulp.task("lint", function() {
     return gulp.src("./*.html")
       .pipe(jshint.extract("always"))
@@ -34,6 +40,13 @@
   });
 
   // ***** Primary Tasks ***** //
+  gulp.task("bower-clean-install", ["clean-bower"], function(cb){
+    return bower().on("error", function(err) {
+      console.log(err);
+      cb();
+    });
+  });
+
   gulp.task("bump", function(){
     return gulp.src(["./package.json", "./bower.json"])
       .pipe(bump({type:"patch"}))
@@ -50,6 +63,7 @@
 
   gulp.task("default", [], function() {
     console.log("********************************************************************".yellow);
+    console.log("  gulp bower-clean-install: delete and re-install bower components".yellow);
     console.log("  gulp bump: increment the version".yellow);
     console.log("  gulp test: run unit and integration tests".yellow);
     console.log("  gulp build: build component".yellow);
