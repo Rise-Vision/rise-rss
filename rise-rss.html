@@ -101,10 +101,6 @@
       },
 
       _handleRequestError: function (errors) {
-        errors.forEach(function (error) {
-          console.error("RSS Error, gadgets.io.makeRequest: " + error);
-        });
-
         this._startTimer();
         this.fire("rise-rss-error", errors);
       },
