@@ -24,13 +24,13 @@ To use the RSS Web Component, you should first install it using Bower:
 bower install https://github.com/Rise-Vision/web-component-rise-rss.git
 ```
 
-Next, construct your HTML page. You should include `webcomponents.min.js` before any code that touches the DOM, and load the web component using an HTML Import. For example:
+Next, construct your HTML page. You should include `webcomponents-lite.min.js` before any code that touches the DOM, and load the web component using an HTML Import. For example:
 
 ```
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
     <link rel="import" href="bower_components/web-component-rise-rss/rise-rss.html">
   </head>
   <body>
@@ -43,8 +43,8 @@ Next, construct your HTML page. You should include `webcomponents.min.js` before
     <script src="//rvashow2.appspot.com/gadgets/gadgets.min.js"></script>  
 
     <script>
-      // Wait for 'polymer-ready'. Ensures the element is upgraded.
-      window.addEventListener('polymer-ready', function(e) {
+      // Wait for 'WebComponentsReady'.
+      window.addEventListener('WebComponentsReady', function(e) {
         var rss = document.querySelector('rise-rss');
 
         // Respond to events it fires.
