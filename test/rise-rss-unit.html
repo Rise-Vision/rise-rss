@@ -18,6 +18,8 @@
 <script src="data/json-rss.js"></script>
 <script src="data/xml-atom.js"></script>
 <script src="data/json-atom.js"></script>
+<script src="mocks/makeRequest.js"></script>
+<script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
 
 <script>
   suite("rise-rss", function() {
@@ -33,6 +35,7 @@
     });
 
     setup(function() {
+      xml = xmlRSS; // default
       responded = false;
     });
 
@@ -146,9 +149,170 @@
 
         clock.tick(60000);
         assert(timerSpy.calledOnce);
+
+        rssRequest._makeRequest.restore();
       });
 
     });
+
+    suite("_validateResponse", function () {
+
+      test("should determine data is not xml and call _handleRequestError", function () {
+        var data = ["This is not XML"],
+          handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
+
+        rssRequest._validateResponse(data);
+
+        assert(handleErrorSpy.calledOnce);
+
+        rssRequest._handleRequestError.restore();
+      });
+
+      test("should determine data is XML and call _handleRequestSuccess passing the data", function () {
+        var handleSuccessSpy = sinon.spy(rssRequest, "_handleRequestSuccess");
+
+        rssRequest._validateResponse(xmlRSS);
+
+        assert(handleSuccessSpy.calledWith(xmlRSS));
+
+        rssRequest._handleRequestSuccess.restore();
+      });
+
+    });
+
+    suite("ready", function() {
+      test("should successfully listen for 'message' event", function() {
+        var handleMessageSpy = sinon.spy(rssRequest, "_handleOfflineMessage"),
+          event = new CustomEvent('message');
+
+        window.dispatchEvent(event);
+
+        assert(handleMessageSpy.calledOnce);
+
+      });
+    });
+
+    suite("go", function () {
+
+      test("should call _makeRequest", function () {
+        var makeRequestSpy = sinon.spy(rssRequest, "_makeRequest");
+
+        rssRequest.go();
+
+        assert(makeRequestSpy.calledOnce);
+
+        rssRequest._makeRequest.restore();
+
+      });
+
+      test("should call _postMessage", function () {
+        var postMessageSpy = sinon.spy(rssRequest, "_postMessage"),
+          regEvent = {
+            data: "register.chrome.app.window",
+            origin: "testorigin",
+            source: {
+              postMessage: function () {}
+            }
+          };
+
+        rssRequest._handleOfflineMessage(regEvent);
+        rssRequest.go();
+
+        assert(postMessageSpy.calledOnce);
+
+        rssRequest._postMessage.restore();
+
+      });
+
+    });
+
+    suite("_postMessage", function () {
+
+      test("should have instance of Offline Player main window call 'postMessage' with correct params", function () {
+        var regEvent = {
+          data: "register.chrome.app.window",
+          origin: "testorigin",
+          source: {
+            postMessage: function (){}
+          }
+        },
+          message = {
+            type: "bypasscors",
+            url: rssRequest.url
+          },
+          offlinePostMessage = sinon.spy(regEvent.source, "postMessage");
+
+        rssRequest._handleOfflineMessage(regEvent);
+        rssRequest._postMessage();
+
+        assert(offlinePostMessage.calledWithExactly(message, regEvent.origin));
+
+        regEvent.source.postMessage.restore();
+
+      });
+
+    });
+
+    suite("_handleOfflineMessage", function () {
+
+      var regEvent = {
+        data: "register.chrome.app.window",
+        origin: "testorigin",
+        source: {
+          postMessage: function () {}
+        }
+      }, validateSpy, handleErrorSpy;
+
+      test("should not make any function calls", function () {
+        validateSpy = sinon.spy(rssRequest, "_validateResponse");
+        handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
+
+        rssRequest._handleOfflineMessage(regEvent);
+
+        assert.equal(validateSpy.callCount, 0);
+        assert.equal(handleErrorSpy.callCount, 0);
+
+        rssRequest._validateResponse.restore();
+        rssRequest._handleRequestError.restore();
+      });
+
+      test("should call _validateResponse with response value", function () {
+        var messageResponse = {
+          data: {
+            response: "<\?xml version=\"1.0\""
+          }
+        };
+
+        validateSpy = sinon.spy(rssRequest, "_validateResponse");
+
+        rssRequest._handleOfflineMessage(regEvent);
+        rssRequest._handleOfflineMessage(messageResponse);
+
+        assert(validateSpy.calledWith(messageResponse.data.response));
+
+        rssRequest._validateResponse.restore();
+      });
+
+      test("should call _handleRequestError with error value", function () {
+        var errorResponse = {
+          data: {
+            error: "Test error"
+          }
+        };
+
+        handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
+
+        rssRequest._handleOfflineMessage(regEvent);
+        rssRequest._handleOfflineMessage(errorResponse);
+
+        assert(handleErrorSpy.calledWith(errorResponse.data.error));
+
+        rssRequest._handleRequestError.restore();
+      });
+
+    });
+
+
 
   });
 </script>

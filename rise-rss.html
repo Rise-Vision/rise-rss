@@ -1,7 +1,5 @@
 <link rel="import" href="../polymer/polymer.html">
 
-<script src="//rvashow2.appspot.com/gadgets/gadgets.min.js"></script>
-
 <script src="modules.js"></script>
 
 <script src="../underscore/underscore.js"></script>
@@ -12,6 +10,12 @@
     /* jshint newcap: false */
 
     "use strict";
+
+    var OFFLINE_REGISTRATION = "register.chrome.app.window";
+
+    var OFFLINE_MESSAGE_TYPE = "bypasscors";
+
+    var offlineWindow, offlineOrigin;
 
     Polymer({
       is: "rise-rss",
@@ -90,13 +94,17 @@
       },
 
       _startTimer: function() {
+        var refreshFn = (offlineWindow) ? this._postMessage : this._makeRequest,
+          self = this;
+
         this.refresh = parseInt(this.refresh, 10);
 
         if (!isNaN(this.refresh) && this.refresh !== 0) {
           this.refresh = (this.refresh < 1) ? 1 : this.refresh;
 
-          // calls _makeRequest() after refresh wait duration
-          this.async(this._makeRequest, this.refresh * 60000);
+          this.debounce("refresh", function () {
+            refreshFn.call(self);
+          }, this.refresh * 60000);
         }
       },
 
@@ -112,21 +120,86 @@
         this.fire("rise-rss-response", this._prepareResponse(feedJSON));
       },
 
+      _validateResponse: function(data) {
+        // ensure for actual XML as the data
+        if (typeof data === "string" && data.indexOf('<?xml version="1.0"') !== -1) { // jshint ignore:line
+          this._handleRequestSuccess(data);
+        }
+        else {
+          // the request didn't respond with RSS XML
+          this._handleRequestError("Request response is not XML");
+        }
+      },
+
+      _handleOfflineMessage: function (evt) {
+        if (evt.data === OFFLINE_REGISTRATION) {
+          // store the main window of the offline player
+          offlineWindow = evt.source;
+
+          // store the origin for future "postMessage" calls on the offlineWindow
+          offlineOrigin = evt.origin;
+
+          return;
+        }
+
+        if (offlineWindow) {
+          // check if "error" property was included in response and not empty, handle request error if so
+          if (evt.data.hasOwnProperty("error") && typeof evt.data.error !== "undefined" && evt.data.error !== "") {
+            this._handleRequestError(evt.data.error);
+            return;
+          }
+
+          // check if "response" property included
+          if (evt.data.hasOwnProperty("response")) {
+            this._validateResponse(evt.data.response);
+          }
+        }
+
+      },
+
       _makeRequest: function () {
         var params = {},
           self = this;
 
-        params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.TEXT;
+        try {
+          params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.TEXT;
 
-        gadgets.io.makeRequest(this.url, function(response) {
-          if (response.errors.length > 0) {
-            self._handleRequestError(response.errors);
-          }
-          else {
-            self._handleRequestSuccess(response.data);
-          }
+          gadgets.io.makeRequest(this.url, function(response) {
+            if (response.errors.length > 0) {
+              self._handleRequestError(response.errors);
+            }
+            else {
+              self._validateResponse(response.data);
+            }
 
-        }, params);
+          }, params);
+        } catch (e) {
+          console.error("gadgets.io.makeRequest failure", e.message);
+        }
+
+      },
+
+      _postMessage: function () {
+        var message = {
+          type: OFFLINE_MESSAGE_TYPE,
+          url: this.url
+        };
+
+        offlineWindow.postMessage(message, offlineOrigin);
+      },
+
+      /**
+       * Lifecycle callback
+       *
+       * @method ready
+       */
+      ready: function () {
+        var self = this;
+
+        // listen for message event on window which will be heard if running in Offline Player
+        window.addEventListener("message", function (evt) {
+          self._handleOfflineMessage(evt);
+        });
       },
 
       /**
@@ -135,7 +208,12 @@
        * @method go
        */
       go: function() {
-        this._makeRequest();
+        if (offlineWindow) {
+          // running in Offline Player
+          this._postMessage();
+        } else {
+          this._makeRequest();
+        }
       }
 
     });

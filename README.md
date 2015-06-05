@@ -6,7 +6,7 @@ The RSS Web Component fetches any RSS/Atom feed and returns the data as a Javasc
 
 The specified feed is periodically retrieved if the `refresh` attribute is set, although a minimum refresh time of 1 minute is enforced.
 
-At this time the RSS Web Component is only compatible with the Rise Vision  [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp) or [Viewer](https://github.com/Rise-Vision/viewer).
+At this time the RSS Web Component is only compatible with the Rise Vision  [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp) or [Offline Player](https://github.com/Rise-Vision/offline-player).
 
 ### Entries
 Entries from an RSS feed can optionally be limited to a specific amount.
@@ -39,7 +39,7 @@ Next, construct your HTML page. You should include `webcomponents-lite.min.js` b
       entries="10"
       refresh="5"></rise-rss>
       
-    // Required dependency for use of gadgets.io.makeRequest (proxy server)
+    // NOTE: This dependency is only required when using component within Rise Vision Chrome App Player
     <script src="//rvashow2.appspot.com/gadgets/gadgets.min.js"></script>  
 
     <script>
@@ -131,7 +131,7 @@ The web component returns a Javascript object with the following format (example
 ### Dependencies
 | Description | URL                                    |
 | ------ | ---------------------------------------------- |
-| Required for use of `gadgets.io.makeRequest` (proxy server)   | `//rvashow2.appspot.com/gadgets/gadgets.min.js` |
+| `gadgets.io.makeRequest` (Only required when using component within Rise Vision [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp))  | `//rvashow2.appspot.com/gadgets/gadgets.min.js` |
 
 ## Built With
 - [Polymer](https://www.polymer-project.org/)
