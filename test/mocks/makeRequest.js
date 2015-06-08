@@ -1,7 +1,10 @@
-var xml;
+var xml, gadgets;
 
-(function (window, gadgets) {
+(function (window) {
   "use strict";
+
+  gadgets = {};
+  gadgets.io = {};
 
   gadgets.io.makeRequest = function (url, callback) {
     var response = {
@@ -14,4 +17,4 @@ var xml;
     callback.call(null, response);
   }
 
-})(window, gadgets);
+})(window);
