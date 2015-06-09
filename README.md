@@ -178,7 +178,7 @@ Now in your browser, navigate to:
 localhost:8080/components/rise-rss/demo.html
 ``` 
 
-Please note that the demo is purely for demonstrative purposes on how to set up the component. At this time, the standalone demo page will not work as the component requires to be used within Rise Vision [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp) or [Viewer](https://github.com/Rise-Vision/viewer). 
+Please note that the demo is purely for demonstrative purposes on how to set up the component. At this time, the standalone demo page will not work unless used within Rise Vision [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp) or [Offline Player](https://github.com/Rise-Vision/offline-player). 
 
 ### Testing
 You can run the suite of tests either by command terminal or via a local web server using Polyserve. 

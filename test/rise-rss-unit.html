@@ -37,6 +37,7 @@
     setup(function() {
       xml = xmlRSS; // default
       responded = false;
+      localStorage.removeItem("riserss"); // clear localStorage
     });
 
     suite("_handleRequestError", function() {
@@ -192,6 +193,8 @@
       });
     });
 
+    // ********************** Offline Player specific tests  ***********************
+
     suite("go", function () {
 
       test("should call _makeRequest", function () {
@@ -300,19 +303,55 @@
           }
         };
 
-        handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
+        handleErrorSpy = sinon.spy(rssRequest, "_handleOfflineError");
 
         rssRequest._handleOfflineMessage(regEvent);
         rssRequest._handleOfflineMessage(errorResponse);
 
         assert(handleErrorSpy.calledWith(errorResponse.data.error));
 
-        rssRequest._handleRequestError.restore();
+        rssRequest._handleOfflineError.restore();
       });
 
     });
 
+    suite("_handleOfflineError", function () {
+      test("should call _handleRequestError with error value", function () {
+        var error = "Test error",
+          handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
 
+        // no cached data present in localStorage
+
+        rssRequest._handleOfflineError(error);
+
+        assert(handleErrorSpy.calledOnce);
+
+        rssRequest._handleRequestError.restore();
+      });
+
+      test("should fire rise-rss-response and provide cached data from localStorage", function (done) {
+        var error = "Test error";
+
+        // will result in caching data to localStorage
+        rssRequest._handleRequestSuccess(xmlRSS);
+
+        listener = function(response) {
+          responded = true;
+
+          assert.isObject(response.detail.feed, "Returned an object");
+          assert.deepEqual(response.detail.feed, jsonRSS, "Returned correct data");
+
+          rssRequest.removeEventListener("rise-storage-response", listener);
+        };
+
+        rssRequest.addEventListener("rise-rss-response", listener);
+
+        rssRequest._handleOfflineError(error);
+
+        assert.isTrue(responded);
+        done();
+      });
+    });
 
   });
 </script>
