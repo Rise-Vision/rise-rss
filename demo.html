@@ -16,7 +16,7 @@
 
   /*
   NOTE: This is purely for demonstrative purposes on how to set up the component. This standalone demo page will
-  not work as the component requires to be used within Rise Vision Chrome App Player or Viewer.
+  not work as the component requires to be used within Rise Vision Chrome App Player or Offline Player.
    */
 
   function webComponentsReady() {
@@ -25,7 +25,7 @@
     var rss = document.querySelector("#rss");
 
     rss.addEventListener("rise-rss-response", function(e) {
-      console.log(e);
+      console.log(e.detail.feed);
     });
 
     rss.go();

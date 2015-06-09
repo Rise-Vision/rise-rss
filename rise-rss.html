@@ -15,7 +15,17 @@
 
     var OFFLINE_MESSAGE_TYPE = "bypasscors";
 
+    var LOCAL_STORAGE_NAME = "riserss";
+
     var offlineWindow, offlineOrigin;
+
+    function supportsLocalStorage() {
+      try {
+        return "localStorage" in window && window.localStorage !== null;
+      } catch (e) {
+        return false;
+      }
+    }
 
     Polymer({
       is: "rise-rss",
@@ -64,7 +74,7 @@
         var response = {},
           limit;
 
-        response.feed = feed;
+        response.feed = _.clone(feed);
 
         this.entries = parseInt(this.entries, 10);
 
@@ -114,10 +124,16 @@
       },
 
       _handleRequestSuccess: function (xml) {
-        var feedJSON = this._parseToJSON(xml);
+        var feedJSON = this._parseToJSON(xml),
+          responseData = this._prepareResponse(feedJSON);
+
+        // cache data in local storage if localStorage is supported and component running in Offline Player
+        if (offlineWindow && supportsLocalStorage()) {
+          localStorage.setItem(LOCAL_STORAGE_NAME, JSON.stringify(responseData));
+        }
 
         this._startTimer();
-        this.fire("rise-rss-response", this._prepareResponse(feedJSON));
+        this.fire("rise-rss-response", responseData);
       },
 
       _validateResponse: function(data) {
@@ -129,6 +145,25 @@
           // the request didn't respond with RSS XML
           this._handleRequestError("Request response is not XML");
         }
+      },
+
+      _handleOfflineError: function (error) {
+        var cachedData;
+
+        if (supportsLocalStorage()) {
+          // retrieve any rss data cached and parse back to an object
+          cachedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_NAME));
+
+          if (cachedData) {
+            // start refresh timer and fire the event using the cached data
+            this._startTimer();
+            this.fire("rise-rss-response", cachedData);
+            return;
+          }
+        }
+
+        // no cached data available, process the error
+        this._handleRequestError(error);
       },
 
       _handleOfflineMessage: function (evt) {
@@ -143,14 +178,15 @@
         }
 
         if (offlineWindow) {
-          // check if "error" property was included in response and not empty, handle request error if so
+          // check if "error" property was included
           if (evt.data.hasOwnProperty("error") && typeof evt.data.error !== "undefined" && evt.data.error !== "") {
-            this._handleRequestError(evt.data.error);
+            this._handleOfflineError(evt.data.error);
             return;
           }
 
           // check if "response" property included
           if (evt.data.hasOwnProperty("response")) {
+            // successful response provided so bypass localStorage retrieval and process the response
             this._validateResponse(evt.data.response);
           }
         }
