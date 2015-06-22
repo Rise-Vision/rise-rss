@@ -56,6 +56,7 @@
         rssRequest.addEventListener("rise-rss-error", listener);
         rssRequest._handleRequestError(errors);
 
+        assert.deepEqual(rssRequest.results, {});
         assert.isTrue(responded);
 
         done();
@@ -76,6 +77,7 @@
         rssRequest.addEventListener("rise-rss-response", listener);
         rssRequest._handleRequestSuccess(xmlRSS);
 
+        assert.deepEqual(rssRequest.results, jsonRSS);
         assert.isTrue(responded);
         done();
       });

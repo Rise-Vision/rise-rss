@@ -115,6 +115,7 @@ The web component returns a Javascript object with the following format (example
 | `url` (required) | `<string>` The URL of the RSS/Atom feed.                                          | `''`             |
 | `entries`              | `<number>` The number of entries to return in the data. | `0` (return all entries) |
 | `refresh`              | `<number>` The number of minutes before the data will be refreshed. The minimum refresh time is 1 minute. | `0` (no refresh) |
+| `results`              | `<object>` Result of fetching a feed. | `{}` (notify) |
 
 ### Events
 | Event                   | Description                        |
