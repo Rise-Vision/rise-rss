@@ -5,34 +5,66 @@
   <title>rise-rss Demo</title>
 
   <script src="../webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="../rise-playlist/rise-playlist.html">
+  <link rel="import" href="../rise-playlist-item/rise-playlist-item.html">
   <link rel="import" href="rise-rss.html">
+
+  <style>
+    .rss-container {
+      width: 100%;
+      height: 600px;
+      padding: 10px;
+      position: relative;
+      overflow: auto;
+    }
+  </style>
 
 </head>
 <body unresolved>
 
-<rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="10" refresh="2"></rise-rss>
+<rise-playlist>
+
+  <rise-playlist-item>
+    <rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="3">
+      <!-- Example HTML structure -->
+      <div class="rss-container">
+        <!-- feed title -->
+        <h2></h2>
+        <!-- feed items -->
+        <div class="items"></div>
+      </div>
+    </rise-rss>
+  </rise-playlist-item>
+
+</rise-playlist>
+
+<!-- Importing javascript which is the logic in building and managing the RSS content -->
+<script type="text/javascript" src="demo-content.js"></script>
 
 <script>
+  /* global DemoContent */
 
-  /*
-  NOTE: This is purely for demonstrative purposes on how to set up the component. This standalone demo page will
-  not work as the component requires to be used within Rise Vision Chrome App Player or Offline Player.
-   */
+  (function () {
+    "use strict";
 
-  function webComponentsReady() {
-    window.removeEventListener("WebComponentsReady", webComponentsReady);
+    /*
+     NOTE: This is purely for demonstrative purposes on how to set up the component. This standalone demo page will
+     not work as the component requires to be used within Rise Vision Chrome App Player or Offline Player.
+     */
 
-    var rss = document.querySelector("#rss");
+    function webComponentsReady() {
+      window.removeEventListener("WebComponentsReady", webComponentsReady);
 
-    rss.addEventListener("rise-rss-response", function(e) {
-      console.log(e.detail.feed);
-    });
+      // new instance of DemoContent object
+      var content = new DemoContent();
 
-    rss.go();
-  }
+      // initialize the content
+      content.init();
+    }
 
-  window.addEventListener("WebComponentsReady", webComponentsReady);
+    window.addEventListener("WebComponentsReady", webComponentsReady);
 
+  })();
 </script>
 
 </body>
