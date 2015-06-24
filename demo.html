@@ -5,6 +5,7 @@
   <title>rise-rss Demo</title>
 
   <script src="../webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="../rise-page/rise-page.html">
   <link rel="import" href="../rise-playlist/rise-playlist.html">
   <link rel="import" href="../rise-playlist-item/rise-playlist-item.html">
   <link rel="import" href="rise-rss.html">
@@ -22,21 +23,23 @@
 </head>
 <body unresolved>
 
-<rise-playlist>
+<rise-page display-id="VGZUDDWYAZHY">
 
-  <rise-playlist-item>
-    <rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="3">
-      <!-- Example HTML structure -->
-      <div class="rss-container">
-        <!-- feed title -->
-        <h2></h2>
-        <!-- feed items -->
-        <div class="items"></div>
-      </div>
-    </rise-rss>
-  </rise-playlist-item>
+  <rise-playlist>
+    <rise-playlist-item>
+      <rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="3">
+        <!-- Example HTML structure -->
+        <div class="rss-container">
+          <!-- feed title -->
+          <h2></h2>
+          <!-- feed items -->
+          <div class="items"></div>
+        </div>
+      </rise-rss>
+    </rise-playlist-item>
+  </rise-playlist>
 
-</rise-playlist>
+</rise-page>
 
 <!-- Importing javascript which is the logic in building and managing the RSS content -->
 <script type="text/javascript" src="demo-content.js"></script>
