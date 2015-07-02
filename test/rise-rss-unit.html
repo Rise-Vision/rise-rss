@@ -192,6 +192,8 @@
 
         assert(handleMessageSpy.calledOnce);
 
+        rssRequest._handleOfflineMessage.restore();
+
       });
     });
 
@@ -266,7 +268,7 @@
         source: {
           postMessage: function () {}
         }
-      }, validateSpy, handleErrorSpy;
+      }, validateSpy, handleErrorSpy, postMessageSpy;
 
       test("should not make any function calls", function () {
         validateSpy = sinon.spy(rssRequest, "_validateResponse");
@@ -279,6 +281,18 @@
 
         rssRequest._validateResponse.restore();
         rssRequest._handleRequestError.restore();
+      });
+
+      test("should call _postMessage from pending request", function () {
+        postMessageSpy = sinon.spy(rssRequest, "_postMessage");
+
+        rssRequest._offlineRequestPending = true;
+        rssRequest._handleOfflineMessage(regEvent);
+
+        assert(postMessageSpy.calledOnce);
+
+        rssRequest._postMessage.restore();
+        rssRequest._offlineRequestPending = false;
       });
 
       test("should call _validateResponse with response value", function () {

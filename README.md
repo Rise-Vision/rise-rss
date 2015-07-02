@@ -31,7 +31,7 @@ Next, construct your HTML page. You should include `webcomponents-lite.min.js` b
 <html>
   <head>
     <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
-    <link rel="import" href="bower_components/web-component-rise-rss/rise-rss.html">
+    <link rel="import" href="bower_components/rise-rss/rise-rss.html">
   </head>
   <body>
     <rise-rss
@@ -201,7 +201,9 @@ localhost:8080/components/rise-rss/test/index.html
 ```
 
 ### Deployment
-Once you are satisifed with your changes, deploy the `components` and `rise-rss` folders to your server. You can then use the web component by following the *Usage* instructions.
+Once you are satisifed with your changes, deploy the `bower_components` to your server and also create a `rise-rss` folder within `bower_components` on your server and upload `rise-rss.html` and `modules.js` to it. You can then use the web component by following the *Usage* instructions.
+
+Please note, if you are trying to view the `demo.html` on a remote server you will need to change the `href` values of the imports within the `<head>` of the document to point to your `bower_components` folder on your server. 
 
 ## Submitting Issues
 If you encounter problems or find defects we really want to hear about them. If you could take the time to add them as issues to this Repository it would be most appreciated. When reporting issues, please use the following format where applicable:
