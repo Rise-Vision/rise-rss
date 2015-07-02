@@ -101,6 +101,8 @@ Example usage with Polymer data binding
         }
       },
 
+      _offlineRequestPending: false,
+
       _prepareResponse: function(feed) {
         var response = {},
           limit;
@@ -208,6 +210,12 @@ Example usage with Polymer data binding
           // store the origin for future "postMessage" calls on the offlineWindow
           offlineOrigin = evt.origin;
 
+          if (this._offlineRequestPending) {
+            // go() was previously called before this registration message was received, execute _postMessage()
+            this._offlineRequestPending = false;
+            this._postMessage();
+          }
+
           return;
         }
 
@@ -230,6 +238,10 @@ Example usage with Polymer data binding
       _makeRequest: function () {
         var params = {},
           self = this;
+
+        if (typeof gadgets === "undefined") {
+          return;
+        }
 
         try {
           params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.TEXT;
@@ -278,6 +290,13 @@ Example usage with Polymer data binding
        * @method go
        */
       go: function() {
+        if (typeof gadgets === "undefined" && !offlineWindow) {
+          // this scenario can happen if go() is called before Offline Player has dispatched initial "message"
+          this._offlineRequestPending = true;
+
+          return;
+        }
+
         if (offlineWindow) {
           // running in Offline Player
           this._postMessage();
