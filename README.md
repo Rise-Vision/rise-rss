@@ -1,12 +1,12 @@
-# RSS Web Component
+# RSS Web Component [![Circle CI](https://circleci.com/gh/Rise-Vision/rise-rss/tree/master.svg?style=svg)](https://circleci.com/gh/Rise-Vision/rise-rss/tree/master)
 
 ## Introduction
 
-The RSS Web Component fetches any RSS/Atom feed and returns the data as a Javascript object.
+`rise-rss` is a Polymer Web Component that works with [Rise Vision](https://www.risevision.com/), the digital signage management application for [Web Designers](http://risevision.com/web-designers). It fetches any RSS/Atom feed and returns the data as a Javascript object.
 
 The specified feed is periodically retrieved if the `refresh` attribute is set, although a minimum refresh time of 1 minute is enforced.
 
-At this time the RSS Web Component is only compatible with the Rise Vision  [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp) or [Offline Player](https://github.com/Rise-Vision/offline-player).
+At this time the RSS Web Component is only compatible with the Rise Vision [Offline Player](https://github.com/Rise-Vision/offline-player) and Chrome is the only browser that this project and Rise Vision supports.
 
 ### Entries
 Entries from an RSS feed can optionally be limited to a specific amount.
@@ -21,7 +21,7 @@ To limit the number of entries, an `entries` attribute should be added to the `<
 ## Usage
 To use the RSS Web Component, you should first install it using Bower:
 ```
-bower install https://github.com/Rise-Vision/web-component-rise-rss.git
+bower install https://github.com/Rise-Vision/rise-rss.git
 ```
 
 Next, construct your HTML page. You should include `webcomponents-lite.min.js` before any code that touches the DOM, and load the web component using an HTML Import. For example:
@@ -109,30 +109,8 @@ The web component returns a Javascript object with the following format (example
 }
 ```
 
-### Attributes
-| Attribute              | Type                                                                            | Default          |
-| ---------------------- | ------------------------------------------------------------------------------- |:----------------:|
-| `url` (required) | `<string>` The URL of the RSS/Atom feed.                                          | `''`             |
-| `entries`              | `<number>` The number of entries to return in the data. | `0` (return all entries) |
-| `refresh`              | `<number>` The number of minutes before the data will be refreshed. The minimum refresh time is 1 minute. | `0` (no refresh) |
-| `results`              | `<object>` Result of fetching a feed. | `{}` (notify) |
-
-### Events
-| Event                   | Description                        |
-| ----------------------- | -----------------------------------|
-| `rise-rss-response` | Fired when a response is received. |
-| `rise-rss-error`    | Fired when an error is received.   |
-
-
-### Methods
-| Method | Description                                    |
-| ------ | ---------------------------------------------- |
-| `go`   | Makes a request to fetch the data from the specified RSS feed URL. |
-
-### Dependencies
-| Description | URL                                    |
-| ------ | ---------------------------------------------- |
-| `gadgets.io.makeRequest` (Only required when using component within Rise Vision [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp))  | `//rvashow2.appspot.com/gadgets/gadgets.min.js` |
+## Documentation
+For further documentation on `rise-rss` attributes, methods, usage, and a comprehensive demo, please see [here](http://rise-vision.github.io/rise-rss).
 
 ## Built With
 - [Polymer](https://www.polymer-project.org/)
@@ -164,8 +142,8 @@ To make changes to the web component, you'll first need to install the dependenc
 
 The web components can now be installed by executing the following commands in Terminal:
 ```
-git clone https://github.com/Rise-Vision/web-component-rise-rss.git
-cd web-component-rise-rss
+git clone https://github.com/Rise-Vision/rise-rss.git
+cd rise-rss
 npm install
 bower install
 ```
@@ -176,10 +154,10 @@ To access the demo locally, run the following command in Terminal: `polyserve`
 Now in your browser, navigate to: 
 
 ```
-localhost:8080/components/rise-rss/demo.html
+localhost:8080/components/rise-rss/demo/index.html
 ``` 
 
-Please note that the demo is purely for demonstrative purposes on how to set up the component. At this time, the standalone demo page will not work unless used within Rise Vision [Chrome App Player](https://github.com/Rise-Vision/player-chromeapp) or [Offline Player](https://github.com/Rise-Vision/offline-player). 
+Please note that the demo is purely for demonstrative purposes on how to set up the component. At this time, the standalone demo page will not work as the `rise-rss` component can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vision/offline-player). 
 
 ### Testing
 You can run the suite of tests either by command terminal or via a local web server using Polyserve. 
@@ -202,8 +180,6 @@ localhost:8080/components/rise-rss/test/index.html
 
 ### Deployment
 Once you are satisifed with your changes, deploy the `bower_components` to your server and also create a `rise-rss` folder within `bower_components` on your server and upload `rise-rss.html` and `modules.js` to it. You can then use the web component by following the *Usage* instructions.
-
-Please note, if you are trying to view the `demo.html` on a remote server you will need to change the `href` values of the imports within the `<head>` of the document to point to your `bower_components` folder on your server. 
 
 ## Submitting Issues
 If you encounter problems or find defects we really want to hear about them. If you could take the time to add them as issues to this Repository it would be most appreciated. When reporting issues, please use the following format where applicable:

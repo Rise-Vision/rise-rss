@@ -5,24 +5,45 @@
 <script src="../underscore/underscore.js"></script>
 
 <!--
-Example usage with Polymer data binding
-<template is="dom-bind">
-  <rise-rss id="rss" url="http://example-feed.xml" entries="10" results="{{result}}"></rise-rss>
-  <div>
-    <h2>{{result.title}}</h2>
+`rise-rss` fetches any RSS/Atom feed and returns the data as a Javascript object.
 
-    <template is="dom-repeat" items="{{result.items}}" as="entry">
-      <div class="story">
-        <div>
-          <span class="title">{{entry.title}}</span><br>
-          <span>{{entry.pubdate}}</span><br>
-          <p>{{entry.description}}</p>
-        </div>
-      </div>
-    </template>
-  </div>
+The specified feed is periodically retrieved if the `refresh` attribute is set, although a minimum refresh
+time of 1 minute is enforced.
 
-</template>
+At this time the RSS Web Component is only compatible with the Rise Vision
+[Offline Player](https://github.com/Rise-Vision/offline-player).
+
+#### Example Usage
+
+    <rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="3"></rise-rss>
+
+    <script>
+      var rss = document.querySelector("rise-rss");
+
+      // Respond to events it fires.
+      rss.addEventListener("rise-rss-response", function (e) {
+        console.log(e.detail.feed);
+      });
+
+      rss.addEventListener("rise-rss-error", function (e) {
+        console.log(e.detail); // Executes a request.
+      });
+
+      rss.go();
+    </script>
+
+##### Entries
+Entries from an RSS feed can optionally be limited to a specific amount. To limit the number of entries,
+an `entries` attribute should be added to the `<rise-rss>` element.
+
+For example, to limit the amount of entries to 5:
+
+    <rise-rss url="http://example.com/rss.xml" entries="5"></rise-rss>
+
+Please note that the demo provided in this documentation is purely for demonstrative purposes on
+how to set up the component. At this time, the demo page will not work as the `rise-rss` component
+can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vision/offline-player).
+
 @demo
 -->
 
@@ -51,19 +72,6 @@ Example usage with Polymer data binding
 
     Polymer({
       is: "rise-rss",
-
-      /**
-       * Fired when a response is received.
-       *
-       * @param {object} feed javascript object representation of feed
-       * @event rise-rss-response
-       */
-
-      /**
-       * Fired when an error is received.
-       *
-       * @event rise-rss-error
-       */
 
       properties: {
 
@@ -100,6 +108,22 @@ Example usage with Polymer data binding
           notify: true
         }
       },
+
+      // Element Behavior
+
+      /**
+       * Fired when a response is received.
+       *
+       * @param {Object} detail
+       * @param {Object} detail.feed Javascript object representation of feed
+       * @event rise-rss-response
+       */
+
+      /**
+       * Fired when an error is received.
+       *
+       * @event rise-rss-error
+       */
 
       _offlineRequestPending: false,
 
@@ -270,11 +294,8 @@ Example usage with Polymer data binding
         offlineWindow.postMessage(message, offlineOrigin);
       },
 
-      /**
-       * Lifecycle callback
-       *
-       * @method ready
-       */
+      // Element Lifecycle
+
       ready: function () {
         var self = this;
 
@@ -287,7 +308,6 @@ Example usage with Polymer data binding
       /**
        * Performs a request to obtain the RSS feed
        *
-       * @method go
        */
       go: function() {
         if (typeof gadgets === "undefined" && !offlineWindow) {
