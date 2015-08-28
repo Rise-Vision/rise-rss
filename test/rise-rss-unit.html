@@ -20,6 +20,7 @@
 <script src="data/json-atom.js"></script>
 <script src="mocks/makeRequest.js"></script>
 <script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
+<script src="../node_modules/widget-tester/mocks/localStorage-mock.js"></script>
 
 <script>
   suite("rise-rss", function() {
@@ -37,7 +38,6 @@
     setup(function() {
       xml = xmlRSS; // default
       responded = false;
-      localStorage.removeItem("riserss"); // clear localStorage
     });
 
     suite("_handleRequestError", function() {
@@ -201,6 +201,10 @@
 
     suite("go", function () {
 
+      teardown(function () {
+        localStorage.removeItem("riserss");
+      });
+
       test("should call _makeRequest", function () {
         var makeRequestSpy = sinon.spy(rssRequest, "_makeRequest");
 
@@ -233,7 +237,62 @@
 
     });
 
+    suite("_setCachedData", function () {
+
+      teardown(function () {
+        window.localStorageError = false;
+        localStorage.removeItem("riserss");
+      });
+
+      test("should catch error thrown by localStorage.setItem and log a warning in console", function () {
+        var warnSpy = sinon.spy(console, "warn");
+
+        // force an error from localStorage.setItem()
+        window.localStorageError = true;
+
+        rssRequest._setCachedData({feed: jsonRSS});
+
+        assert(warnSpy.calledOnce);
+        console.warn.restore();
+      });
+
+      test("should ensure data passed in localStorage.setItem() is stringified", function () {
+        rssRequest._setCachedData({feed:jsonRSS});
+
+        var value = localStorage.getItem("riserss");
+
+        assert.isString(value);
+      });
+
+    });
+
+    suite("_getCachedData", function () {
+      var value;
+
+      teardown(function () {
+        localStorage.removeItem("riserss");
+      });
+
+      test("Should return null when no cached data exists", function () {
+        value = rssRequest._getCachedData();
+
+        assert.isNull(value);
+      });
+
+      test("Should ensure value returned has been parsed as JSON", function () {
+        localStorage.setItem("riserss", JSON.stringify({feed: jsonRSS}));
+
+        value = rssRequest._getCachedData();
+
+        assert.isObject(value);
+      });
+    });
+
     suite("_postMessage", function () {
+
+      teardown(function () {
+        localStorage.removeItem("riserss");
+      });
 
       test("should have instance of Offline Player main window call 'postMessage' with correct params", function () {
         var regEvent = {
@@ -261,6 +320,10 @@
     });
 
     suite("_handleOfflineMessage", function () {
+
+      teardown(function () {
+        localStorage.removeItem("riserss");
+      });
 
       var regEvent = {
         data: "register.chrome.app.window",
@@ -332,6 +395,10 @@
     });
 
     suite("_handleOfflineError", function () {
+      teardown(function () {
+        localStorage.removeItem("riserss");
+      });
+
       test("should call _handleRequestError with error value", function () {
         var error = "Test error",
           handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
