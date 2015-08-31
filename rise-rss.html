@@ -127,6 +127,25 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
       _offlineRequestPending: false,
 
+      _getCachedData: function () {
+        if (supportsLocalStorage()) {
+          // retrieve cached data and parse back
+          return JSON.parse(localStorage.getItem(LOCAL_STORAGE_NAME));
+        }
+
+        return null;
+      },
+
+      _setCachedData: function (data) {
+        if (supportsLocalStorage()) {
+          try {
+            localStorage.setItem(LOCAL_STORAGE_NAME, JSON.stringify(data));
+          } catch(e) {
+            console.warn(e.message);
+          }
+        }
+      },
+
       _prepareResponse: function(feed) {
         var response = {},
           limit;
@@ -185,9 +204,9 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         var feedJSON = this._parseToJSON(xml),
           responseData = this._prepareResponse(feedJSON);
 
-        // cache data in local storage if localStorage is supported and component running in Offline Player
-        if (offlineWindow && supportsLocalStorage()) {
-          localStorage.setItem(LOCAL_STORAGE_NAME, JSON.stringify(responseData));
+        if (offlineWindow) {
+          // cache the data if possible
+          this._setCachedData(responseData);
         }
 
         this.results = responseData.feed;
@@ -207,19 +226,14 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
       },
 
       _handleOfflineError: function (error) {
-        var cachedData;
+        var cachedData = this._getCachedData();
 
-        if (supportsLocalStorage()) {
-          // retrieve any rss data cached and parse back to an object
-          cachedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_NAME));
-
-          if (cachedData) {
-            this.results = cachedData.feed;
-            // start refresh timer and fire the event using the cached data
-            this._startTimer();
-            this.fire("rise-rss-response", cachedData);
-            return;
-          }
+        if (cachedData) {
+          this.results = cachedData.feed;
+          // start refresh timer and fire the event using the cached data
+          this._startTimer();
+          this.fire("rise-rss-response", cachedData);
+          return;
         }
 
         // no cached data available, process the error
