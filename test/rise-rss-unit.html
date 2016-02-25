@@ -181,6 +181,17 @@
         rssRequest._handleRequestSuccess.restore();
       });
 
+      test("should determine data is XML with single quotes for xml version", function () {
+        var handleSuccessSpy = sinon.spy(rssRequest, "_handleRequestSuccess"),
+          xml = "<?xml version='1.0'?><rss version='2.0'><channel></channel></rss>";
+
+        rssRequest._validateResponse(xml);
+
+        assert(handleSuccessSpy.calledWith(xml));
+
+        rssRequest._handleRequestSuccess.restore();
+      });
+
     });
 
     suite("ready", function() {
