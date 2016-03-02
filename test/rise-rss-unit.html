@@ -40,29 +40,6 @@
       responded = false;
     });
 
-    suite("_handleRequestError", function() {
-      test("should fire rise-rss-error if there is a problem with the gadgets.io.makeRequest response", function(done) {
-        var errors = [
-            "500 Failed ..."
-          ],
-          listener = function(response) {
-            responded = true;
-
-            assert.isArray(response.detail);
-
-            rssRequest.removeEventListener("rise-rss-error", listener);
-          };
-
-        rssRequest.addEventListener("rise-rss-error", listener);
-        rssRequest._handleRequestError(errors);
-
-        assert.deepEqual(rssRequest.results, {});
-        assert.isTrue(responded);
-
-        done();
-      });
-    });
-
     suite("_handleRequestSuccess", function() {
       test("should fire rise-rss-response and provide a Javascript object representation of a feed", function(done) {
 
@@ -393,34 +370,38 @@
           }
         };
 
-        handleErrorSpy = sinon.spy(rssRequest, "_handleOfflineError");
+        handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
 
         rssRequest._handleOfflineMessage(regEvent);
         rssRequest._handleOfflineMessage(errorResponse);
 
         assert(handleErrorSpy.calledWith(errorResponse.data.error));
 
-        rssRequest._handleOfflineError.restore();
+        rssRequest._handleRequestError.restore();
       });
 
     });
 
-    suite("_handleOfflineError", function () {
-      teardown(function () {
-        localStorage.removeItem("riserss");
-      });
+    suite("_handleRequestError", function() {
+      test("should fire rise-rss-error if there is a problem with the gadgets.io.makeRequest response", function(done) {
+        var errors = [
+            "500 Failed ..."
+          ],
+          listener = function(response) {
+            responded = true;
 
-      test("should call _handleRequestError with error value", function () {
-        var error = "Test error",
-          handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
+            assert.isArray(response.detail);
 
-        // no cached data present in localStorage
+            rssRequest.removeEventListener("rise-rss-error", listener);
+          };
 
-        rssRequest._handleOfflineError(error);
+        rssRequest.addEventListener("rise-rss-error", listener);
+        rssRequest._handleRequestError(errors);
 
-        assert(handleErrorSpy.calledOnce);
+        assert.deepEqual(rssRequest.results, {});
+        assert.isTrue(responded);
 
-        rssRequest._handleRequestError.restore();
+        done();
       });
 
       test("should fire rise-rss-response and provide cached data from localStorage", function (done) {
@@ -440,13 +421,12 @@
 
         rssRequest.addEventListener("rise-rss-response", listener);
 
-        rssRequest._handleOfflineError(error);
+        rssRequest._handleRequestError(error);
 
         assert.isTrue(responded);
         done();
       });
     });
-
   });
 </script>
 </body>
