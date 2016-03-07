@@ -1,6 +1,6 @@
 {
   "name": "rise-rss",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "authors": [
     "Stuart Lees <stuart.lees@risevision.com>"
   ],
@@ -20,6 +20,7 @@
   ],
   "dependencies": {
     "polymer": "Polymer/polymer#^1.0.0",
+    "iron-ajax": "PolymerElements/iron-ajax#^1.0.0",
     "underscore": "~1.8.2"
   },
   "devDependencies": {

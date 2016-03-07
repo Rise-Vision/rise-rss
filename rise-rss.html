@@ -1,4 +1,5 @@
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
 
 <script src="modules.js"></script>
 
@@ -46,6 +47,18 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
 @demo
 -->
+
+<dom-module id="rise-rss">
+  <template>
+    <iron-ajax id="proxyRequest"
+               url="{{_proxyRequestUrl}}"
+               handle-as="document"
+               on-response="_handleProxyRequest"
+               on-error="_handleProxyRequestError"
+               verbose="true">
+    </iron-ajax>
+  </template>
+</dom-module>
 
 <script>
   (function() {
@@ -127,6 +140,10 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
       _offlineRequestPending: false,
 
+      _proxyServerUrl: "https://proxy.risevision.com/",
+
+      _proxyRequestUrl: "",
+
       _getCachedData: function () {
         if (supportsLocalStorage()) {
           // retrieve cached data and parse back
@@ -180,7 +197,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
       },
 
       _startTimer: function() {
-        var refreshFn = (offlineWindow) ? this._postMessage : this._makeRequest,
+        var refreshFn = (offlineWindow) ? this._postMessage : this._makeProxyRequest,
           self = this;
 
         this.refresh = parseInt(this.refresh, 10);
@@ -288,6 +305,24 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
       },
 
+      _makeProxyRequest: function () {
+        this._proxyRequestUrl = this._proxyServerUrl + this.url;
+        this.$.proxyRequest.generateRequest();
+      },
+
+      _handleProxyRequest: function (e, resp) {
+        if (resp && resp.response) {
+          this._validateResponse(resp.response);
+        }
+        else {
+          this._startTimer();
+        }
+      },
+
+      _handleProxyRequestError: function () {
+        this._makeRequest();
+      },
+
       _makeRequest: function () {
         var params = {},
           self = this;
@@ -350,7 +385,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
           // running in Offline Player
           this._postMessage();
         } else {
-          this._makeRequest();
+          this._makeProxyRequest();
         }
       }
 
