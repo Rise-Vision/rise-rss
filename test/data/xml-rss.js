@@ -1,4 +1,4 @@
-var xmlRSS = '<?xml version="1.0"?>' +
+var xmlRSS =
   '<rss version="2.0">' +
   '<channel>' +
   '<title>Example RSS 2.0</title>' +

@@ -1,4 +1,4 @@
-var xmlAtom = '<?xml version="1.0" encoding="utf-8"?>' +
+var xmlAtom =
     '<feed xmlns="http://www.w3.org/2005/Atom">' +
       '<title type="text">Example Atom</title>' +
       '<subtitle type="html">Example Atom - Test subtitle</subtitle>' +
