@@ -24,20 +24,26 @@
 
 <script>
   suite("rise-rss", function() {
-    var xmlDOM, clock, responded, listener,
-      rssRequest = document.querySelector("#request");
+    var xmlDOM, server, clock, responded, listener,
+      rssRequest = document.querySelector("#request"),
+      header = { "Content-Type": "application/xml" };
 
     suiteSetup(function() {
       clock = sinon.useFakeTimers();
+
+      server = sinon.fakeServer.create();
+      server.respondImmediately = true;
     });
 
     suiteTeardown(function() {
+      server.restore();
       clock.restore();
     });
 
     setup(function() {
-      xml = xmlRSS; // default
-      xmlDOM = new window.DOMParser().parseFromString(xml, "text/xml");
+      server.respondWith("GET", "https://proxy.risevision.com/http://feed.xml",
+        [200, header, xmlRSS]);
+      xmlDOM = new window.DOMParser().parseFromString(xmlRSS, "text/xml");
       responded = false;
     });
 
@@ -124,14 +130,14 @@
       });
 
       test("should make a new request for data", function() {
-        timerSpy = sinon.spy(rssRequest, "_makeRequest");
+        timerSpy = sinon.spy(rssRequest, "_makeProxyRequest");
 
         rssRequest._startTimer();
 
         clock.tick(60000);
         assert(timerSpy.calledOnce);
 
-        rssRequest._makeRequest.restore();
+        rssRequest._makeProxyRequest.restore();
       });
 
     });
@@ -181,14 +187,14 @@
         localStorage.removeItem("riserss");
       });
 
-      test("should call _makeRequest", function () {
-        var makeRequestSpy = sinon.spy(rssRequest, "_makeRequest");
+      test("should call _makeProxyRequest", function () {
+        var makeProxyRequestSpy = sinon.spy(rssRequest, "_makeProxyRequest");
 
         rssRequest.go();
 
-        assert(makeRequestSpy.calledOnce);
+        assert(makeProxyRequestSpy.calledOnce);
 
-        rssRequest._makeRequest.restore();
+        rssRequest._makeProxyRequest.restore();
 
       });
 
@@ -413,6 +419,16 @@
 
         assert.isTrue(responded);
         done();
+      });
+    });
+
+    suite("_handleProxyRequestError", function() {
+      test("should call makeRequest if there is an error on the proxy server", function() {
+        makeRequestSpy = sinon.spy(rssRequest, "_makeRequest");
+        rssRequest._handleProxyRequestError();
+        assert(makeRequestSpy.calledOnce);
+
+        rssRequest._makeRequest.restore();
       });
     });
   });
