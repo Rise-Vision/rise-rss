@@ -14,19 +14,16 @@
 
 <rise-rss id="request" url="http://feed.xml"></rise-rss>
 
-<script src="data/xml-rss.js"></script>
 <script src="data/json-rss.js"></script>
-<script src="data/xml-atom.js"></script>
-<script src="data/json-atom.js"></script>
 <script src="mocks/makeRequest.js"></script>
 <script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
 <script src="../node_modules/widget-tester/mocks/localStorage-mock.js"></script>
 
 <script>
   suite("rise-rss", function() {
-    var xmlDOM, server, clock, responded, listener,
+    var server, clock, responded, listener,
       rssRequest = document.querySelector("#request"),
-      header = { "Content-Type": "application/xml" };
+      header = { "Content-Type": "application/json" };
 
     suiteSetup(function() {
       clock = sinon.useFakeTimers();
@@ -41,9 +38,8 @@
     });
 
     setup(function() {
-      server.respondWith("GET", "https://proxy.risevision.com/http://feed.xml",
-        [200, header, xmlRSS]);
-      xmlDOM = new window.DOMParser().parseFromString(xmlRSS, "text/xml");
+      server.respondWith("GET", "https://feed-parser.risevision.com/http://feed.xml",
+        [200, header, JSON.stringify(jsonRSS)]);
       responded = false;
     });
 
@@ -59,30 +55,10 @@
         };
 
         rssRequest.addEventListener("rise-rss-response", listener);
-        rssRequest._handleRequestSuccess(xmlRSS);
+        rssRequest._handleRequestSuccess(jsonRSS);
 
-        assert.deepEqual(rssRequest.results, jsonRSS);
         assert.isTrue(responded);
         done();
-      });
-
-    });
-
-    suite("_parseToJSON", function() {
-      var feed;
-
-      test("should return a JavaScript object representation of an RSS 2.0 feed", function() {
-        feed = rssRequest._parseToJSON(xmlRSS);
-
-        assert.isObject(feed);
-        assert.deepEqual(feed, jsonRSS);
-      });
-
-      test("should return a JavaScript object representation of an Atom feed", function() {
-        feed = rssRequest._parseToJSON(xmlAtom);
-
-        assert.isObject(feed);
-        assert.deepEqual(feed, jsonAtom);
       });
 
     });
@@ -95,7 +71,7 @@
 
         assert.property(response, "feed");
         assert.isObject(response.feed);
-        assert.equal(response.feed.items.length, jsonRSS.items.length);
+        assert.equal(response.feed.items.length, jsonRSS.length);
       });
 
       test("should return only the first 2 entry items of all available entries", function() {
@@ -109,7 +85,7 @@
         rssRequest.entries = 15;
         response = rssRequest._prepareResponse(jsonRSS);
 
-        assert.equal(response.feed.items.length, jsonRSS.items.length);
+        assert.equal(response.feed.items.length, jsonRSS.length);
       });
 
     });
@@ -130,14 +106,14 @@
       });
 
       test("should make a new request for data", function() {
-        timerSpy = sinon.spy(rssRequest, "_makeProxyRequest");
+        timerSpy = sinon.spy(rssRequest, "_makeFeedParserRequest");
 
         rssRequest._startTimer();
 
         clock.tick(60000);
         assert(timerSpy.calledOnce);
 
-        rssRequest._makeProxyRequest.restore();
+        rssRequest._makeFeedParserRequest.restore();
       });
 
     });
@@ -146,15 +122,15 @@
       test("should call success handler for a valid RSS feed", function () {
         var handleSuccessSpy = sinon.spy(rssRequest, "_handleRequestSuccess");
 
-        rssRequest._validateResponse(xmlDOM);
+        rssRequest._validateResponse(jsonRSS);
 
-        assert(handleSuccessSpy.calledWith(xmlRSS));
+        assert(handleSuccessSpy.calledWith(jsonRSS));
 
         rssRequest._handleRequestSuccess.restore();
       });
 
-      test("should fire error if RSS feed does not have a version attribute", function () {
-        var data = new window.DOMParser().parseFromString("<rss></rss>", "text/xml"),
+      test("should fire error if there was an error on the feed parser", function () {
+        var data = {"Error" : "Bad status code"},
           handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
 
         rssRequest._validateResponse(data);
@@ -187,14 +163,14 @@
         localStorage.removeItem("riserss");
       });
 
-      test("should call _makeProxyRequest", function () {
-        var makeProxyRequestSpy = sinon.spy(rssRequest, "_makeProxyRequest");
+      test("should call _makeFeedParserRequest", function () {
+        var makeFeedParserRequestSpy = sinon.spy(rssRequest, "_makeFeedParserRequest");
 
         rssRequest.go();
 
-        assert(makeProxyRequestSpy.calledOnce);
+        assert(makeFeedParserRequestSpy.calledOnce);
 
-        rssRequest._makeProxyRequest.restore();
+        rssRequest._makeFeedParserRequest.restore();
 
       });
 
@@ -343,7 +319,7 @@
       test("should call _validateResponse with response value", function () {
         var messageResponse = {
           data: {
-            response: '<rss version="2.0">'
+            response: '[{}]'
           }
         };
 
@@ -352,7 +328,7 @@
         rssRequest._handleOfflineMessage(regEvent);
         rssRequest._handleOfflineMessage(messageResponse);
 
-        assert(validateSpy.calledWith(new window.DOMParser().parseFromString(messageResponse.data.response, "text/xml")));
+        assert(validateSpy.calledWith(messageResponse.data.response));
 
         rssRequest._validateResponse.restore();
       });
@@ -402,13 +378,13 @@
         var error = "Test error";
 
         // will result in caching data to localStorage
-        rssRequest._handleRequestSuccess(xmlRSS);
+        rssRequest._handleRequestSuccess(jsonRSS);
 
         listener = function(response) {
           responded = true;
 
           assert.isObject(response.detail.feed, "Returned an object");
-          assert.deepEqual(response.detail.feed, jsonRSS, "Returned correct data");
+          assert.deepEqual(response.detail.feed.items, jsonRSS, "Returned correct data");
 
           rssRequest.removeEventListener("rise-storage-response", listener);
         };
@@ -419,16 +395,6 @@
 
         assert.isTrue(responded);
         done();
-      });
-    });
-
-    suite("_handleProxyRequestError", function() {
-      test("should call makeRequest if there is an error on the proxy server", function() {
-        makeRequestSpy = sinon.spy(rssRequest, "_makeRequest");
-        rssRequest._handleProxyRequestError();
-        assert(makeRequestSpy.calledOnce);
-
-        rssRequest._makeRequest.restore();
       });
     });
   });
