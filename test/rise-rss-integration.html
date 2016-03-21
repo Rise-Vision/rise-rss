@@ -14,18 +14,14 @@
 
 <rise-rss id="request" url="http://feed.xml"></rise-rss>
 
-<script src="data/xml-rss.js"></script>
 <script src="data/json-rss.js"></script>
-<script src="data/xml-atom.js"></script>
-<script src="data/json-atom.js"></script>
 <script src="mocks/makeRequest.js"></script>
 <script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
-
 <script>
   suite("rise-rss", function() {
     var clock, server, listener,
       rssRequest = document.querySelector("#request"),
-      header = { "Content-Type": "application/xml" };
+      header = { "Content-Type": "application/json" };
 
     // Runs for every suite.
     suiteSetup(function() {
@@ -43,9 +39,8 @@
 
     // Runs for every test.
     setup(function() {
-      xml = xmlRSS; // default
-      server.respondWith("GET", "https://proxy.risevision.com/http://feed.xml",
-        [200, header, xmlRSS]);
+      server.respondWith("GET", "https://feed-parser.risevision.com/http://feed.xml",
+        [200, header, JSON.stringify(jsonRSS)]);
     });
 
     suite("response object", function() {
@@ -54,9 +49,9 @@
         listener = function(response) {
           assert.property(response.detail, "feed", "feed property exists");
           assert.isObject(response.detail.feed, "feed property is an object");
-          assert.deepEqual(response.detail.feed, jsonRSS, "feed property value equals RSS response object");
+          assert.deepEqual(response.detail.feed.items, jsonRSS, "feed property value equals RSS response object");
 
-          assert.deepEqual(rssRequest.results, jsonRSS, "component property 'results' value equals RSS response object");
+          assert.deepEqual(rssRequest.results.items, jsonRSS, "component property 'results' value equals RSS response object");
 
           rssRequest.removeEventListener("rise-rss-response", listener);
           done();
@@ -66,35 +61,13 @@
         rssRequest.go();
 
       });
-
-      test("should receive a JavaScript object representation of an Atom feed", function(done) {
-        // use an Atom feed in this test
-        server.respondWith("GET", "https://proxy.risevision.com/http://feed.xml",
-          [200, header, xmlAtom]);
-
-        listener = function(response) {
-          assert.property(response.detail, "feed", "feed property exists");
-          assert.isObject(response.detail.feed, "feed property is an object");
-          assert.deepEqual(response.detail.feed, jsonAtom, "feed property value equals Atom response object");
-
-          assert.deepEqual(rssRequest.results, jsonAtom, "component property 'results' value equals Atom response object");
-
-          rssRequest.removeEventListener("rise-rss-response", listener);
-          done();
-
-        };
-
-        rssRequest.addEventListener("rise-rss-response", listener);
-        rssRequest.go();
-      });
-
     });
 
     suite("entries", function() {
 
       test("should return all entries in feed", function(done) {
         listener = function(response) {
-          assert.equal(response.detail.feed.items.length, jsonRSS.items.length);
+          assert.equal(response.detail.feed.items.length, jsonRSS.length);
 
           rssRequest.removeEventListener("rise-rss-response", listener);
           done();
