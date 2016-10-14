@@ -1,6 +1,6 @@
 {
   "name": "rise-rss",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "authors": [
     "Stuart Lees <stuart.lees@risevision.com>"
   ],
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "rise-logger": "https://github.com/Rise-Vision/rise-logger.git#1.0.0",
     "rise-page": "https://github.com/Rise-Vision/rise-page.git",
     "rise-playlist": "https://github.com/Rise-Vision/rise-playlist.git",
     "rise-playlist-item": "https://github.com/Rise-Vision/rise-playlist-item.git",

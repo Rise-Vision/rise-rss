@@ -18,9 +18,17 @@
 <script src="mocks/makeRequest.js"></script>
 <script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
 <script>
+
+  var rssRequest = document.querySelector("#request"),
+    display = "abc123";
+
+  // mock logger getting display id from Rise Cache
+  sinon.stub(rssRequest.$.logger.$.displayId, "generateRequest", function() {
+    rssRequest.$.logger._onDisplayIdResponse(null, {response: {displayId: display}});
+  });
+
   suite("rise-rss", function() {
     var clock, server, listener,
-      rssRequest = document.querySelector("#request"),
       header = { "Content-Type": "application/json" };
 
     // Runs for every suite.
