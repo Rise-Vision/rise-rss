@@ -1,15 +1,16 @@
 (function (console) {
   "use strict";
 
-  var gulp = require("gulp");
-  var bump = require("gulp-bump");
-  var jshint = require("gulp-jshint");
-  var colors = require("colors");
-  var transform = require('vinyl-transform');
-  var runSequence = require("run-sequence");
-  var wct = require("web-component-tester").gulp.init(gulp);
   var bower = require("gulp-bower");
+  var bump = require("gulp-bump");
+  var colors = require("colors");
   var del = require("del");
+  var gulp = require("gulp");
+  var htmlreplace = require("gulp-html-replace");
+  var jshint = require("gulp-jshint");
+  var runSequence = require("run-sequence");
+  var transform = require('vinyl-transform');
+  var wct = require("web-component-tester").gulp.init(gulp);
 
   gulp.task("clean-bower", function(cb){
     del(["./bower_components/**"], cb);
@@ -21,6 +22,19 @@
       .pipe(jshint())
       .pipe(jshint.reporter("jshint-stylish"))
       .pipe(jshint.reporter("fail"));
+  });
+
+  gulp.task("version", function() {
+    var pkg = require("./package.json");
+
+    gulp.src("./rise-rss.html")
+      .pipe(htmlreplace({
+        "version": {
+          src: pkg.version,
+          tpl: "<script>var rssVersion = \"%s\";</script>"
+        }
+      }, {keepBlockTags: true}))
+      .pipe(gulp.dest("./"));
   });
 
   // ***** Primary Tasks ***** //
@@ -41,7 +55,7 @@
     runSequence("test:local", cb);
   });
 
-  gulp.task("build", function (cb) {
+  gulp.task("build", ["version"], function (cb) {
     runSequence("lint", cb);
   });
 

@@ -23,10 +23,22 @@
 <script src="../node_modules/widget-tester/mocks/localStorage-mock.js"></script>
 
 <script>
+
+  var rssRequest = document.querySelector("#request"),
+    rssRequest2 = document.querySelector("#request2"),
+    display = "abc123";
+
+  // mock logger getting display id from Rise Cache
+  sinon.stub(rssRequest.$.logger.$.displayId, "generateRequest", function() {
+    rssRequest.$.logger._onDisplayIdResponse(null, {response: {displayId: display}});
+  });
+
+  sinon.stub(rssRequest2.$.logger.$.displayId, "generateRequest", function() {
+    rssRequest2.$.logger._onDisplayIdResponse(null, {response: {displayId: display}});
+  });
+
   suite("rise-rss", function() {
     var server, clock, responded, listener,
-      rssRequest = document.querySelector("#request"),
-      rssRequest2 = document.querySelector("#request2"),
       header = { "Content-Type": "application/json" };
 
     suiteSetup(function() {
@@ -45,6 +57,19 @@
       server.respondWith("GET", "https://feed-parser.risevision.com/http://feed.xml",
         [200, header, JSON.stringify(jsonRSS)]);
       responded = false;
+    });
+
+    suite("_isValidUsage", function () {
+
+      test("should return true when 'standalone' or 'widget'", function () {
+        assert.isTrue(rssRequest._isValidUsage("widget"));
+        assert.isTrue(rssRequest._isValidUsage("standalone"));
+      });
+
+      test("should return false when invalid", function () {
+        assert.isFalse(rssRequest._isValidUsage("test"));
+      });
+
     });
 
     suite("_handleRequestSuccess", function() {
@@ -146,6 +171,16 @@
     });
 
     suite("ready", function() {
+      var logStub;
+
+      setup(function() {
+        logStub = sinon.stub(rssRequest.$.logger, "log");
+      });
+
+      teardown(function() {
+        logStub.restore();
+      });
+
       test("should successfully listen for 'message' event", function() {
         var handleMessageSpy = sinon.spy(rssRequest, "_handleOfflineMessage"),
           event = new CustomEvent('message');
@@ -156,6 +191,19 @@
 
         rssRequest._handleOfflineMessage.restore();
 
+      });
+
+      test("should log usage", function () {
+        rssRequest.ready();
+        assert.equal(logStub.args[0][0],"component_rss_events");
+        assert.include(JSON.stringify(logStub.args[0][1]),"{\"event\":\"ready\",\"version\":");
+      });
+
+      test("should log usage and include 'usage_type'", function() {
+        rssRequest.usage = "widget";
+        rssRequest.ready();
+        assert.equal(logStub.args[0][0],"component_rss_events");
+        assert.include(JSON.stringify(logStub.args[0][1]),"{\"event\":\"ready\",\"usage_type\":\"widget\",\"version\":");
       });
     });
 
