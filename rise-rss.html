@@ -61,12 +61,12 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 </dom-module>
 
 <!-- build:version -->
-<script>var rssVersion = "1.4.0";</script>
+<script>var rssVersion = "1.4.2";</script>
 <!-- endbuild -->
 
 <script>
   (function() {
-    /* global Polymer, gadgets, _ */
+    /* global Polymer, _ */
     /* jshint newcap: false */
 
     "use strict";
@@ -357,13 +357,6 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
        *
        */
       go: function() {
-        if (typeof gadgets === "undefined" && !offlineWindow) {
-          // this scenario can happen if go() is called before Offline Player has dispatched initial "message"
-          this._offlineRequestPending = true;
-
-          return;
-        }
-
         if (offlineWindow) {
           // running in Offline Player
           this._postMessage();
