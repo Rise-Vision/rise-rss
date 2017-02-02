@@ -23,445 +23,457 @@
 <script src="../node_modules/widget-tester/mocks/localStorage-mock.js"></script>
 
 <script>
+  /* global sinon, suite, test, assert, setup, teardown, suiteSetup, suiteTeardown, jsonRSS, jsonRSS2 */
 
-  var rssRequest = document.querySelector("#request"),
-    rssRequest2 = document.querySelector("#request2"),
+  var rssRequest = document.querySelector( "#request" ),
+    rssRequest2 = document.querySelector( "#request2" ),
     display = "abc123";
 
   // mock logger getting display id from Rise Cache
-  sinon.stub(rssRequest.$.logger.$.displayId, "generateRequest", function() {
-    rssRequest.$.logger._onDisplayIdResponse(null, {response: {displayId: display}});
-  });
+  sinon.stub( rssRequest.$.logger.$.displayId, "generateRequest", function() {
+    rssRequest.$.logger._onDisplayIdResponse( null, { response: { displayId: display } } );
+  } );
 
-  sinon.stub(rssRequest2.$.logger.$.displayId, "generateRequest", function() {
-    rssRequest2.$.logger._onDisplayIdResponse(null, {response: {displayId: display}});
-  });
+  sinon.stub( rssRequest2.$.logger.$.displayId, "generateRequest", function() {
+    rssRequest2.$.logger._onDisplayIdResponse( null, { response: { displayId: display } } );
+  } );
 
-  suite("rise-rss", function() {
-    var server, clock, responded, listener,
+  suite( "rise-rss", function() {
+    var server,
+      clock,
+      responded,
+      listener,
       header = { "Content-Type": "application/json" };
 
-    suiteSetup(function() {
+    suiteSetup( function() {
       clock = sinon.useFakeTimers();
 
       server = sinon.fakeServer.create();
       server.respondImmediately = true;
-    });
+    } );
 
-    suiteTeardown(function() {
+    suiteTeardown( function() {
       server.restore();
       clock.restore();
-    });
+    } );
 
-    setup(function() {
-      server.respondWith("GET", "https://feed-parser.risevision.com/http://feed.xml",
-        [200, header, JSON.stringify(jsonRSS)]);
+    setup( function() {
+      server.respondWith( "GET", "https://feed-parser.risevision.com/http://feed.xml",
+        [ 200, header, JSON.stringify( jsonRSS ) ] );
       responded = false;
-    });
+    } );
 
-    suite("_isValidUsage", function () {
+    suite( "_isValidUsage", function() {
 
-      test("should return true when 'standalone' or 'widget'", function () {
-        assert.isTrue(rssRequest._isValidUsage("widget"));
-        assert.isTrue(rssRequest._isValidUsage("standalone"));
-      });
+      test( "should return true when 'standalone' or 'widget'", function() {
+        assert.isTrue( rssRequest._isValidUsage( "widget" ) );
+        assert.isTrue( rssRequest._isValidUsage( "standalone" ) );
+      } );
 
-      test("should return false when invalid", function () {
-        assert.isFalse(rssRequest._isValidUsage("test"));
-      });
+      test( "should return false when invalid", function() {
+        assert.isFalse( rssRequest._isValidUsage( "test" ) );
+      } );
 
-    });
+    } );
 
-    suite("_handleRequestSuccess", function() {
-      test("should fire rise-rss-response and provide a Javascript object representation of a feed", function(done) {
+    suite( "_handleRequestSuccess", function() {
+      test( "should fire rise-rss-response and provide a Javascript object representation of a feed", function( done ) {
 
-        listener = function(response) {
+        listener = function( response ) {
           responded = true;
 
-          assert.isObject(response.detail.feed);
+          assert.isObject( response.detail.feed );
 
-          rssRequest.removeEventListener("rise-storage-response", listener);
+          rssRequest.removeEventListener( "rise-storage-response", listener );
         };
 
-        rssRequest.addEventListener("rise-rss-response", listener);
-        rssRequest._handleRequestSuccess(jsonRSS);
+        rssRequest.addEventListener( "rise-rss-response", listener );
+        rssRequest._handleRequestSuccess( jsonRSS );
 
-        assert.isTrue(responded);
+        assert.isTrue( responded );
         done();
-      });
+      } );
 
-    });
+    } );
 
-    suite("_prepareResponse", function() {
+    suite( "_prepareResponse", function() {
       var response;
 
-      test("should return a javascript object with a property named feed, including all entry items", function() {
-        response = rssRequest._prepareResponse(jsonRSS);
+      test( "should return a javascript object with a property named feed, including all entry items", function() {
+        response = rssRequest._prepareResponse( jsonRSS );
 
-        assert.property(response, "feed");
-        assert.isObject(response.feed);
-        assert.equal(response.feed.items.length, jsonRSS.length);
-      });
+        assert.property( response, "feed" );
+        assert.isObject( response.feed );
+        assert.equal( response.feed.items.length, jsonRSS.length );
+      } );
 
-      test("should return only the first 2 entry items of all available entries", function() {
+      test( "should return only the first 2 entry items of all available entries", function() {
         rssRequest.entries = 2;
-        response = rssRequest._prepareResponse(jsonRSS);
+        response = rssRequest._prepareResponse( jsonRSS );
 
-        assert.equal(response.feed.items.length, 2);
-      });
+        assert.equal( response.feed.items.length, 2 );
+      } );
 
-      test("should return all entry items when entries value higher than feed entries available", function() {
+      test( "should return all entry items when entries value higher than feed entries available", function() {
         rssRequest.entries = 15;
-        response = rssRequest._prepareResponse(jsonRSS);
+        response = rssRequest._prepareResponse( jsonRSS );
 
-        assert.equal(response.feed.items.length, jsonRSS.length);
-      });
+        assert.equal( response.feed.items.length, jsonRSS.length );
+      } );
 
-    });
+    } );
 
-    suite("_startTimer", function() {
+    suite( "_startTimer", function() {
       var timerSpy;
 
-      test("should correctly set refresh interval", function() {
+      test( "should correctly set refresh interval", function() {
         rssRequest.refresh = 10;
         rssRequest._startTimer();
-        assert.equal(rssRequest.refresh, 10);
-      });
+        assert.equal( rssRequest.refresh, 10 );
+      } );
 
-      test("should enforce a minimum refresh interval", function() {
+      test( "should enforce a minimum refresh interval", function() {
         rssRequest.refresh = -1;
         rssRequest._startTimer();
-        assert.equal(rssRequest.refresh, 1);
-      });
+        assert.equal( rssRequest.refresh, 1 );
+      } );
 
-      test("should make a new request for data", function() {
-        timerSpy = sinon.spy(rssRequest, "_makeFeedParserRequest");
+      test( "should make a new request for data", function() {
+        timerSpy = sinon.spy( rssRequest, "_makeFeedParserRequest" );
 
         rssRequest._startTimer();
 
-        clock.tick(60000);
-        assert(timerSpy.calledOnce);
+        clock.tick( 60000 );
+        assert( timerSpy.calledOnce );
 
         rssRequest._makeFeedParserRequest.restore();
-      });
+      } );
 
-    });
+    } );
 
-    suite("_validateResponse", function () {
-      test("should call success handler for a valid RSS feed", function () {
-        var handleSuccessSpy = sinon.spy(rssRequest, "_handleRequestSuccess");
+    suite( "_validateResponse", function() {
+      test( "should call success handler for a valid RSS feed", function() {
+        var handleSuccessSpy = sinon.spy( rssRequest, "_handleRequestSuccess" );
 
-        rssRequest._validateResponse(jsonRSS);
+        rssRequest._validateResponse( jsonRSS );
 
-        assert(handleSuccessSpy.calledWith(jsonRSS));
+        assert( handleSuccessSpy.calledWith( jsonRSS ) );
 
         rssRequest._handleRequestSuccess.restore();
-      });
+      } );
 
-      test("should fire error if there was an error on the feed parser", function () {
-        var data = {"Error" : "Bad status code"},
-          handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
+      test( "should fire error if there was an error on the feed parser", function() {
+        var data = { "Error": "Bad status code" },
+          handleErrorSpy = sinon.spy( rssRequest, "_handleRequestError" );
 
-        rssRequest._validateResponse(data);
+        rssRequest._validateResponse( data );
 
-        assert(handleErrorSpy.calledOnce);
+        assert( handleErrorSpy.calledOnce );
 
         rssRequest._handleRequestError.restore();
-      });
-    });
+      } );
+    } );
 
-    suite("ready", function() {
+    suite( "ready", function() {
       var logStub;
 
-      setup(function() {
-        logStub = sinon.stub(rssRequest.$.logger, "log");
-      });
+      setup( function() {
+        logStub = sinon.stub( rssRequest.$.logger, "log" );
+      } );
 
-      teardown(function() {
+      teardown( function() {
         logStub.restore();
-      });
+      } );
 
-      test("should successfully listen for 'message' event", function() {
-        var handleMessageSpy = sinon.spy(rssRequest, "_handleOfflineMessage"),
-          event = new CustomEvent('message');
+      test( "should successfully listen for 'message' event", function() {
+        var handleMessageSpy = sinon.spy( rssRequest, "_handleOfflineMessage" ),
+          event = new CustomEvent( "message" );
 
-        window.dispatchEvent(event);
+        window.dispatchEvent( event );
 
-        assert(handleMessageSpy.calledOnce);
+        assert( handleMessageSpy.calledOnce );
 
         rssRequest._handleOfflineMessage.restore();
 
-      });
+      } );
 
-      test("should log usage", function () {
+      test( "should log usage", function() {
         rssRequest.ready();
-        assert.equal(logStub.args[0][0],"component_rss_events");
-        assert.include(JSON.stringify(logStub.args[0][1]),"{\"event\":\"ready\",\"version\":");
-      });
+        assert.equal( logStub.args[ 0 ][ 0 ], "component_rss_events" );
+        assert.include( JSON.stringify( logStub.args[ 0 ][ 1 ] ), "{\"event\":\"ready\",\"version\":" );
+      } );
 
-      test("should log usage and include 'usage_type'", function() {
+      test( "should log usage and include 'usage_type'", function() {
         rssRequest.usage = "widget";
         rssRequest.ready();
-        assert.equal(logStub.args[0][0],"component_rss_events");
-        assert.include(JSON.stringify(logStub.args[0][1]),"{\"event\":\"ready\",\"usage_type\":\"widget\",\"version\":");
-      });
-    });
+        assert.equal( logStub.args[ 0 ][ 0 ], "component_rss_events" );
+        assert.include( JSON.stringify( logStub.args[ 0 ][ 1 ] ), "{\"event\":\"ready\",\"usage_type\":\"widget\",\"version\":" );
+      } );
+    } );
 
     // // ********************** Offline Player specific tests  ***********************
 
-    suite("go", function () {
+    suite( "go", function() {
 
-      teardown(function () {
-        localStorage.removeItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15");
-      });
+      teardown( function() {
+        localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
+      } );
 
-      test("should call _makeFeedParserRequest", function () {
-        var makeFeedParserRequestSpy = sinon.spy(rssRequest, "_makeFeedParserRequest");
+      test( "should call _makeFeedParserRequest", function() {
+        var makeFeedParserRequestSpy = sinon.spy( rssRequest, "_makeFeedParserRequest" );
 
         rssRequest.go();
 
-        assert(makeFeedParserRequestSpy.calledOnce);
+        assert( makeFeedParserRequestSpy.calledOnce );
 
         rssRequest._makeFeedParserRequest.restore();
 
-      });
+      } );
 
-      test("should call _postMessage", function () {
-        var postMessageSpy = sinon.spy(rssRequest, "_postMessage"),
+      test( "should call _postMessage", function() {
+        var postMessageSpy = sinon.spy( rssRequest, "_postMessage" ),
           regEvent = {
             data: "register.chrome.app.window",
             origin: "testorigin",
             source: {
-              postMessage: function () {}
+              postMessage: function() {}
             }
           };
 
-        rssRequest._handleOfflineMessage(regEvent);
+        rssRequest._handleOfflineMessage( regEvent );
         rssRequest.go();
 
-        assert(postMessageSpy.calledOnce);
+        assert( postMessageSpy.calledOnce );
 
         rssRequest._postMessage.restore();
 
-      });
+      } );
 
-    });
+    } );
 
-    suite("_setCachedData", function () {
+    suite( "_setCachedData", function() {
 
-      teardown(function () {
+      teardown( function() {
         window.localStorageError = false;
-        localStorage.removeItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15");
-      });
+        localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
+      } );
 
-      test("should catch error thrown by localStorage.setItem and log a warning in console", function () {
-        var warnSpy = sinon.spy(console, "warn");
+      test( "should catch error thrown by localStorage.setItem and log a warning in console", function() {
+        var warnSpy = sinon.spy( console, "warn" );
 
         // force an error from localStorage.setItem()
         window.localStorageError = true;
 
-        rssRequest._setCachedData({feed: jsonRSS});
+        rssRequest._setCachedData( { feed: jsonRSS } );
 
-        assert(warnSpy.calledOnce);
-        console.warn.restore();
-      });
+        assert( warnSpy.calledOnce );
+        console.warn.restore(); // eslint-disable-line no-console
+      } );
 
-      test("should ensure data passed in localStorage.setItem() is stringified", function () {
-        rssRequest._setCachedData({feed:jsonRSS});
+      test( "should ensure data passed in localStorage.setItem() is stringified", function() {
+        var value;
 
-        var value = localStorage.getItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15");
+        rssRequest._setCachedData( { feed: jsonRSS } );
 
-        assert.isString(value);
-      });
+        value = localStorage.getItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
 
-      test("should ensure data passed in localStorage.setItem() is not the same for two rss components added to the presentation", function () {
-        rssRequest._setCachedData({feed:jsonRSS});
-        rssRequest2._setCachedData({feed:jsonRSS2});
+        assert.isString( value );
+      } );
 
-        var value1 = localStorage.getItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15");
-        var value2 = localStorage.getItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZDIueG1s_0");
+      test( "should ensure data passed in localStorage.setItem() is not the same for two rss components added to the presentation", function() {
+        var value1,
+          value2;
 
-        assert.notDeepEqual(value1, value2);
+        rssRequest._setCachedData( { feed: jsonRSS } );
+        rssRequest2._setCachedData( { feed: jsonRSS2 } );
 
-      });
+        value1 = localStorage.getItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
+        value2 = localStorage.getItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZDIueG1s_0" );
+
+        assert.notDeepEqual( value1, value2 );
+
+      } );
 
 
-    });
+    } );
 
-    suite("_getCachedData", function () {
+    suite( "_getCachedData", function() {
       var value;
 
-      teardown(function () {
-        localStorage.removeItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15");
-      });
+      teardown( function() {
+        localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
+      } );
 
-      test("Should return null when no cached data exists", function () {
+      test( "Should return null when no cached data exists", function() {
         value = rssRequest._getCachedData();
 
-        assert.isNull(value);
-      });
+        assert.isNull( value );
+      } );
 
-      test("Should ensure value returned has been parsed as JSON", function () {
-        localStorage.setItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15", JSON.stringify({feed: jsonRSS}));
+      test( "Should ensure value returned has been parsed as JSON", function() {
+        localStorage.setItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15", JSON.stringify( { feed: jsonRSS } ) );
 
         value = rssRequest._getCachedData();
 
-        assert.isObject(value);
-      });
-    });
+        assert.isObject( value );
+      } );
+    } );
 
-    suite("_postMessage", function () {
+    suite( "_postMessage", function() {
 
-      teardown(function () {
-        localStorage.removeItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15");
-      });
+      teardown( function() {
+        localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
+      } );
 
-      test("should have instance of Offline Player main window call 'postMessage' with correct params", function () {
+      test( "should have instance of Offline Player main window call 'postMessage' with correct params", function() {
         var regEvent = {
-          data: "register.chrome.app.window",
-          origin: "testorigin",
-          source: {
-            postMessage: function (){}
-          }
-        },
+            data: "register.chrome.app.window",
+            origin: "testorigin",
+            source: {
+              postMessage: function() {}
+            }
+          },
           message = {
             type: "bypasscors",
             url: rssRequest.url
           },
-          offlinePostMessage = sinon.spy(regEvent.source, "postMessage");
+          offlinePostMessage = sinon.spy( regEvent.source, "postMessage" );
 
-        rssRequest._handleOfflineMessage(regEvent);
+        rssRequest._handleOfflineMessage( regEvent );
         rssRequest._postMessage();
 
-        assert(offlinePostMessage.calledWithExactly(message, regEvent.origin));
+        assert( offlinePostMessage.calledWithExactly( message, regEvent.origin ) );
 
         regEvent.source.postMessage.restore();
 
-      });
+      } );
 
-    });
+    } );
 
-    suite("_handleOfflineMessage", function () {
-
-      teardown(function () {
-        localStorage.removeItem("riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15");
-      });
+    suite( "_handleOfflineMessage", function() {
 
       var regEvent = {
-        data: "register.chrome.app.window",
-        origin: "testorigin",
-        source: {
-          postMessage: function () {}
-        }
-      }, validateSpy, handleErrorSpy, postMessageSpy;
+          data: "register.chrome.app.window",
+          origin: "testorigin",
+          source: {
+            postMessage: function() {}
+          }
+        },
+        validateSpy,
+        handleErrorSpy,
+        postMessageSpy;
 
-      test("should not make any function calls", function () {
-        validateSpy = sinon.spy(rssRequest, "_validateResponse");
-        handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
+      teardown( function() {
+        localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
+      } );
 
-        rssRequest._handleOfflineMessage(regEvent);
+      test( "should not make any function calls", function() {
+        validateSpy = sinon.spy( rssRequest, "_validateResponse" );
+        handleErrorSpy = sinon.spy( rssRequest, "_handleRequestError" );
 
-        assert.equal(validateSpy.callCount, 0);
-        assert.equal(handleErrorSpy.callCount, 0);
+        rssRequest._handleOfflineMessage( regEvent );
+
+        assert.equal( validateSpy.callCount, 0 );
+        assert.equal( handleErrorSpy.callCount, 0 );
 
         rssRequest._validateResponse.restore();
         rssRequest._handleRequestError.restore();
-      });
+      } );
 
-      test("should call _postMessage from pending request", function () {
-        postMessageSpy = sinon.spy(rssRequest, "_postMessage");
+      test( "should call _postMessage from pending request", function() {
+        postMessageSpy = sinon.spy( rssRequest, "_postMessage" );
 
         rssRequest._offlineRequestPending = true;
-        rssRequest._handleOfflineMessage(regEvent);
+        rssRequest._handleOfflineMessage( regEvent );
 
-        assert(postMessageSpy.calledOnce);
+        assert( postMessageSpy.calledOnce );
 
         rssRequest._postMessage.restore();
         rssRequest._offlineRequestPending = false;
-      });
+      } );
 
-      test("should call _validateResponse with response value", function () {
+      test( "should call _validateResponse with response value", function() {
         var messageResponse = {
           data: {
-            response: '[{}]'
+            response: "[{}]"
           }
         };
 
-        validateSpy = sinon.spy(rssRequest, "_validateResponse");
+        validateSpy = sinon.spy( rssRequest, "_validateResponse" );
 
-        rssRequest._handleOfflineMessage(regEvent);
-        rssRequest._handleOfflineMessage(messageResponse);
+        rssRequest._handleOfflineMessage( regEvent );
+        rssRequest._handleOfflineMessage( messageResponse );
 
-        assert(validateSpy.calledWith(messageResponse.data.response));
+        assert( validateSpy.calledWith( messageResponse.data.response ) );
 
         rssRequest._validateResponse.restore();
-      });
+      } );
 
-      test("should call _handleRequestError with error value", function () {
+      test( "should call _handleRequestError with error value", function() {
         var errorResponse = {
           data: {
             error: "Test error"
           }
         };
 
-        handleErrorSpy = sinon.spy(rssRequest, "_handleRequestError");
+        handleErrorSpy = sinon.spy( rssRequest, "_handleRequestError" );
 
-        rssRequest._handleOfflineMessage(regEvent);
-        rssRequest._handleOfflineMessage(errorResponse);
+        rssRequest._handleOfflineMessage( regEvent );
+        rssRequest._handleOfflineMessage( errorResponse );
 
-        assert(handleErrorSpy.calledWith(errorResponse.data.error));
+        assert( handleErrorSpy.calledWith( errorResponse.data.error ) );
 
         rssRequest._handleRequestError.restore();
-      });
+      } );
 
-    });
+    } );
 
-    suite("_handleRequestError", function() {
-      test("should fire rise-rss-error if there is a problem with the gadgets.io.makeRequest response", function(done) {
+    suite( "_handleRequestError", function() {
+      test( "should fire rise-rss-error if there is a problem with the gadgets.io.makeRequest response", function( done ) {
         var errors = [
             "500 Failed ..."
           ],
-          listener = function(response) {
+          listener = function( response ) {
             responded = true;
 
-            assert.isArray(response.detail);
+            assert.isArray( response.detail );
 
-            rssRequest.removeEventListener("rise-rss-error", listener);
+            rssRequest.removeEventListener( "rise-rss-error", listener );
           };
 
-        rssRequest.addEventListener("rise-rss-error", listener);
-        rssRequest._handleRequestError(errors);
+        rssRequest.addEventListener( "rise-rss-error", listener );
+        rssRequest._handleRequestError( errors );
 
-        assert.deepEqual(rssRequest.results, {});
-        assert.isTrue(responded);
+        assert.deepEqual( rssRequest.results, {} );
+        assert.isTrue( responded );
 
         done();
-      });
+      } );
 
-      test("should fire rise-rss-response and provide cached data from localStorage", function (done) {
+      test( "should fire rise-rss-response and provide cached data from localStorage", function( done ) {
         var error = "Test error";
 
         // will result in caching data to localStorage
-        rssRequest._handleRequestSuccess(jsonRSS);
+        rssRequest._handleRequestSuccess( jsonRSS );
 
-        listener = function(response) {
+        listener = function( response ) {
           responded = true;
 
-          assert.isObject(response.detail.feed, "Returned an object");
-          assert.deepEqual(response.detail.feed.items, jsonRSS, "Returned correct data");
+          assert.isObject( response.detail.feed, "Returned an object" );
+          assert.deepEqual( response.detail.feed.items, jsonRSS, "Returned correct data" );
 
-          rssRequest.removeEventListener("rise-storage-response", listener);
+          rssRequest.removeEventListener( "rise-storage-response", listener );
         };
 
-        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest.addEventListener( "rise-rss-response", listener );
 
-        rssRequest._handleRequestError(error);
+        rssRequest._handleRequestError( error );
 
-        assert.isTrue(responded);
+        assert.isTrue( responded );
         done();
-      });
-    });
-  });
+      } );
+    } );
+  } );
 </script>
 </body>
 </html>

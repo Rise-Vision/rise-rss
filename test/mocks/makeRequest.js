@@ -1,6 +1,9 @@
-var xml, gadgets;
+/* exported xml */
 
-(function (window) {
+var xml,
+  gadgets;
+
+( function( window ) {
   "use strict";
 
   var parseXml;
@@ -8,21 +11,21 @@ var xml, gadgets;
   gadgets = {};
   gadgets.io = {};
 
-  if (window.DOMParser) {
-    parseXml = function(xmlStr) {
-      return (new window.DOMParser()).parseFromString(xmlStr, "text/xml");
+  if ( window.DOMParser ) {
+    parseXml = function( xmlStr ) {
+      return ( new window.DOMParser() ).parseFromString( xmlStr, "text/xml" );
     };
   }
 
-  gadgets.io.makeRequest = function (url, callback) {
+  gadgets.io.makeRequest = function( url, callback ) {
     var response = {
-      data: parseXml(window.xml),
+      data: parseXml( window.xml ),
       errors: [],
       rc: 200,
       text: window.xml
     };
 
-    callback.call(null, response);
+    callback.call( null, response );
   }
 
-})(window);
+} )( window );

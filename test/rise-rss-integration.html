@@ -19,89 +19,93 @@
 <script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
 <script>
 
-  var rssRequest = document.querySelector("#request"),
+  /* global sinon, suite, test, assert, setup, suiteSetup, suiteTeardown, jsonRSS */
+
+  var rssRequest = document.querySelector( "#request" ),
     display = "abc123";
 
   // mock logger getting display id from Rise Cache
-  sinon.stub(rssRequest.$.logger.$.displayId, "generateRequest", function() {
-    rssRequest.$.logger._onDisplayIdResponse(null, {response: {displayId: display}});
-  });
+  sinon.stub( rssRequest.$.logger.$.displayId, "generateRequest", function() {
+    rssRequest.$.logger._onDisplayIdResponse( null, { response: { displayId: display } } );
+  } );
 
-  suite("rise-rss", function() {
-    var clock, server, listener,
+  suite( "rise-rss", function() {
+    var clock,
+      server,
+      listener,
       header = { "Content-Type": "application/json" };
 
     // Runs for every suite.
-    suiteSetup(function() {
+    suiteSetup( function() {
       clock = sinon.useFakeTimers();
 
       server = sinon.fakeServer.create();
       server.respondImmediately = true;
 
-    });
+    } );
 
-    suiteTeardown(function() {
+    suiteTeardown( function() {
       server.restore();
       clock.restore();
-    });
+    } );
 
     // Runs for every test.
-    setup(function() {
-      server.respondWith("GET", "https://feed-parser.risevision.com/http://feed.xml",
-        [200, header, JSON.stringify(jsonRSS)]);
-    });
+    setup( function() {
+      server.respondWith( "GET", "https://feed-parser.risevision.com/http://feed.xml",
+        [ 200, header, JSON.stringify( jsonRSS ) ] );
+    } );
 
-    suite("response object", function() {
+    suite( "response object", function() {
 
-      test("should receive a JavaScript object representation of an RSS 2.0 feed", function(done) {
-        listener = function(response) {
-          assert.property(response.detail, "feed", "feed property exists");
-          assert.isObject(response.detail.feed, "feed property is an object");
-          assert.deepEqual(response.detail.feed.items, jsonRSS, "feed property value equals RSS response object");
+      test( "should receive a JavaScript object representation of an RSS 2.0 feed", function( done ) {
+        listener = function( response ) {
+          assert.property( response.detail, "feed", "feed property exists" );
+          assert.isObject( response.detail.feed, "feed property is an object" );
+          assert.deepEqual( response.detail.feed.items, jsonRSS, "feed property value equals RSS response object" );
 
-          assert.deepEqual(rssRequest.results.items, jsonRSS, "component property 'results' value equals RSS response object");
+          assert.deepEqual( rssRequest.results.items, jsonRSS, "component property 'results' value equals RSS response object" );
 
-          rssRequest.removeEventListener("rise-rss-response", listener);
+          rssRequest.removeEventListener( "rise-rss-response", listener );
           done();
         };
 
-        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest.addEventListener( "rise-rss-response", listener );
         rssRequest.go();
 
-      });
-    });
+      } );
+    } );
 
-    suite("entries", function() {
+    suite( "entries", function() {
 
-      test("should return all entries in feed", function(done) {
-        listener = function(response) {
-          assert.equal(response.detail.feed.items.length, jsonRSS.length);
+      test( "should return all entries in feed", function( done ) {
+        listener = function( response ) {
+          assert.equal( response.detail.feed.items.length, jsonRSS.length );
 
-          rssRequest.removeEventListener("rise-rss-response", listener);
+          rssRequest.removeEventListener( "rise-rss-response", listener );
           done();
         };
 
-        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest.addEventListener( "rise-rss-response", listener );
         rssRequest.go();
-      });
+      } );
 
-      test("should limit number of entries in feed to 2", function(done) {
-        listener = function(response) {
-          assert.equal(response.detail.feed.items.length, 2);
+      test( "should limit number of entries in feed to 2", function( done ) {
+        listener = function( response ) {
+          assert.equal( response.detail.feed.items.length, 2 );
 
-          rssRequest.removeEventListener("rise-rss-response", listener);
+          rssRequest.removeEventListener( "rise-rss-response", listener );
           done();
         };
 
         rssRequest.entries = 2;
-        rssRequest.addEventListener("rise-rss-response", listener);
+        rssRequest.addEventListener( "rise-rss-response", listener );
         rssRequest.go();
-      });
+      } );
 
-    });
+    } );
 
 
-  });
+  } );
 </script>
 </body>
 </html>
