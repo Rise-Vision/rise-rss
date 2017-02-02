@@ -1,3 +1,5 @@
+/* exported jsonRSS2 */
+
 var jsonRSS2 = [
   {
     "title": "RSS 2.0 - Entry 1 title rss 2",

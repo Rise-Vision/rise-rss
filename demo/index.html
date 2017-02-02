@@ -51,7 +51,7 @@
 <script>
   /* global DemoContent */
 
-  (function () {
+  ( function() {
     "use strict";
 
     /*
@@ -60,18 +60,18 @@
      */
 
     function webComponentsReady() {
-      window.removeEventListener("WebComponentsReady", webComponentsReady);
-
       // new instance of DemoContent object
       var content = new DemoContent();
+
+      window.removeEventListener( "WebComponentsReady", webComponentsReady );
 
       // initialize the content
       content.init();
     }
 
-    window.addEventListener("WebComponentsReady", webComponentsReady);
+    window.addEventListener( "WebComponentsReady", webComponentsReady );
 
-  })();
+  } )();
 </script>
 
 </body>

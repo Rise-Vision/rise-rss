@@ -15,29 +15,33 @@
 <rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="3"></rise-rss>
 
 <script>
-  (function () {
+  ( function() {
+    /* eslint-disable no-console */
+
     "use strict";
 
     function webComponentsReady() {
-      window.removeEventListener("WebComponentsReady", webComponentsReady);
+      var rss = document.querySelector( "rise-rss" );
 
-      var rss = document.querySelector("rise-rss");
+      window.removeEventListener( "WebComponentsReady", webComponentsReady );
 
-      rss.addEventListener("rise-rss-response", function (e) {
-        console.log(e.detail.feed);
-      });
+      rss.addEventListener( "rise-rss-response", function( e ) {
+        console.log( e.detail.feed );
+      } );
 
-      rss.addEventListener("rise-rss-error", function (e) {
-        console.log(e.detail);
-      });
+      rss.addEventListener( "rise-rss-error", function( e ) {
+        console.log( e.detail );
+      } );
 
       rss.go();
 
     }
 
-    window.addEventListener("WebComponentsReady", webComponentsReady);
+    window.addEventListener( "WebComponentsReady", webComponentsReady );
 
-  })();
+    /* eslint-enable no-console */
+
+  } )();
 </script>
 
 </body>

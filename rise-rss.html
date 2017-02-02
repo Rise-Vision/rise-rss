@@ -61,35 +61,32 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 </dom-module>
 
 <!-- build:version -->
-<script>var rssVersion = "1.4.2";</script>
+<script>var rssVersion = "1.4.3";</script>
 <!-- endbuild -->
 
 <script>
-  (function() {
-    /* global Polymer, _ */
+  ( function() {
+    /* global Polymer, _, rssVersion */
     /* jshint newcap: false */
 
     "use strict";
 
-    var OFFLINE_REGISTRATION = "register.chrome.app.window";
-
-    var OFFLINE_MESSAGE_TYPE = "bypasscors";
-
-    var LOCAL_STORAGE_NAME = "riserss";
-
-    var BQ_TABLE_NAME = "component_rss_events";
-
-    var offlineWindow, offlineOrigin;
+    var OFFLINE_REGISTRATION = "register.chrome.app.window",
+      OFFLINE_MESSAGE_TYPE = "bypasscors",
+      LOCAL_STORAGE_NAME = "riserss",
+      BQ_TABLE_NAME = "component_rss_events",
+      offlineWindow,
+      offlineOrigin;
 
     function supportsLocalStorage() {
       try {
         return "localStorage" in window && window.localStorage !== null;
-      } catch (e) {
+      } catch ( e ) {
         return false;
       }
     }
 
-    Polymer({
+    Polymer( {
       is: "rise-rss",
 
       properties: {
@@ -131,7 +128,9 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
          */
         results: {
           type: Object,
-          value: function() { return {}; },
+          value: function() {
+            return {};
+          },
           notify: true
         }
       },
@@ -158,52 +157,52 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
       _feedParserRequestUrl: "",
 
-      _isValidUsage: function(usage) {
+      _isValidUsage: function( usage ) {
         return usage === "standalone" || usage === "widget";
       },
 
-      _getLocalStorageKey: function () {
-        return LOCAL_STORAGE_NAME + "_" + window.btoa(encodeURIComponent( escape( this.url ))) + "_" + this.entries;
+      _getLocalStorageKey: function() {
+        return LOCAL_STORAGE_NAME + "_" + window.btoa( encodeURIComponent( escape( this.url ) ) ) + "_" + this.entries;
       },
 
-      _getCachedData: function () {
-        if (supportsLocalStorage()) {
+      _getCachedData: function() {
+        if ( supportsLocalStorage() ) {
           // retrieve cached data and parse back
-          return JSON.parse(localStorage.getItem(this._getLocalStorageKey()));
+          return JSON.parse( localStorage.getItem( this._getLocalStorageKey() ) );
         }
 
         return null;
       },
 
-      _setCachedData: function (data) {
-        console.log(this._getLocalStorageKey());
+      _setCachedData: function( data ) {
+        console.log( this._getLocalStorageKey() ); // eslint-disable-line no-console
 
-        if (supportsLocalStorage()) {
+        if ( supportsLocalStorage() ) {
           try {
-            localStorage.setItem(this._getLocalStorageKey(), JSON.stringify(data));
-          } catch(e) {
-            console.warn(e.message);
+            localStorage.setItem( this._getLocalStorageKey(), JSON.stringify( data ) );
+          } catch ( e ) {
+            console.warn( e.message ); // eslint-disable-line no-console
           }
         }
       },
 
-      _prepareResponse: function(items) {
+      _prepareResponse: function( items ) {
         var response = {},
           limit;
 
-        response.feed = { "items" : _.clone(items) };
+        response.feed = { "items": _.clone( items ) };
 
-        this.entries = parseInt(this.entries, 10);
+        this.entries = parseInt( this.entries, 10 );
 
         // limit the entries to provide in response
-        if (!isNaN(this.entries) && this.entries > 0) {
+        if ( !isNaN( this.entries ) && this.entries > 0 ) {
           // ensure feed.items exists
-          if (items && items.length) {
+          if ( items && items.length ) {
             // determine value to use for how many items to limit to
-            limit = (items.length >= this.entries) ? this.entries : items.length;
+            limit = ( items.length >= this.entries ) ? this.entries : items.length;
 
             // revise to include only required entries
-            response.feed.items = _.first(items, limit);
+            response.feed.items = _.first( items, limit );
           }
         }
 
@@ -211,72 +210,72 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
       },
 
       _startTimer: function() {
-        var refreshFn = (offlineWindow) ? this._postMessage : this._makeFeedParserRequest,
+        var refreshFn = ( offlineWindow ) ? this._postMessage : this._makeFeedParserRequest,
           self = this;
 
-        this.refresh = parseInt(this.refresh, 10);
+        this.refresh = parseInt( this.refresh, 10 );
 
-        if (!isNaN(this.refresh) && this.refresh !== 0) {
-          this.refresh = (this.refresh < 1) ? 1 : this.refresh;
+        if ( !isNaN( this.refresh ) && this.refresh !== 0 ) {
+          this.refresh = ( this.refresh < 1 ) ? 1 : this.refresh;
 
-          this.debounce("refresh", function () {
-            refreshFn.call(self);
-          }, this.refresh * 60000);
+          this.debounce( "refresh", function() {
+            refreshFn.call( self );
+          }, this.refresh * 60000 );
         }
       },
 
-      _handleRequestError: function (errors) {
-        if (!this._respondWithCacheData()) {
+      _handleRequestError: function( errors ) {
+        if ( !this._respondWithCacheData() ) {
           // no cached data available, process the error
           this.results = {};
           this._startTimer();
-          this.fire("rise-rss-error", errors);
+          this.fire( "rise-rss-error", errors );
         }
       },
 
-      _handleRequestSuccess: function (items) {
-        var responseData = this._prepareResponse(items);
+      _handleRequestSuccess: function( items ) {
+        var responseData = this._prepareResponse( items );
 
         // cache the data if possible
-        this._setCachedData(responseData);
+        this._setCachedData( responseData );
 
         this.results = responseData.feed;
         this._startTimer();
-        this.fire("rise-rss-response", responseData);
+        this.fire( "rise-rss-response", responseData );
       },
 
-      _validateResponse: function(data) {
-        if (data.Error) {
-          this._handleRequestError(data.Error);
-        } else{
-          this._handleRequestSuccess(data);
+      _validateResponse: function( data ) {
+        if ( data.Error ) {
+          this._handleRequestError( data.Error );
+        } else {
+          this._handleRequestSuccess( data );
         }
       },
 
-      _respondWithCacheData: function () {
-        var hasCacheData = false;
-        var cachedData = this._getCachedData();
+      _respondWithCacheData: function() {
+        var hasCacheData = false,
+          cachedData = this._getCachedData();
 
-        if (cachedData) {
+        if ( cachedData ) {
           hasCacheData = true;
           this.results = cachedData.feed;
           // start refresh timer and fire the event using the cached data
           this._startTimer();
-          this.fire("rise-rss-response", cachedData);
+          this.fire( "rise-rss-response", cachedData );
         }
 
         return hasCacheData;
       },
 
-      _handleOfflineMessage: function (evt) {
-        if (evt.data === OFFLINE_REGISTRATION) {
+      _handleOfflineMessage: function( evt ) {
+        if ( evt.data === OFFLINE_REGISTRATION ) {
           // store the main window of the offline player
           offlineWindow = evt.source;
 
           // store the origin for future "postMessage" calls on the offlineWindow
           offlineOrigin = evt.origin;
 
-          if (this._offlineRequestPending) {
+          if ( this._offlineRequestPending ) {
             // go() was previously called before this registration message was received, execute _postMessage()
             this._offlineRequestPending = false;
             this._postMessage();
@@ -285,71 +284,70 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
           return;
         }
 
-        if (offlineWindow) {
+        if ( offlineWindow ) {
           // check if "error" property was included
-          if (evt.data.hasOwnProperty("error") && typeof evt.data.error !== "undefined" && evt.data.error !== "") {
-            this._handleRequestError(evt.data.error);
+          if ( evt.data.hasOwnProperty( "error" ) && typeof evt.data.error !== "undefined" && evt.data.error !== "" ) {
+            this._handleRequestError( evt.data.error );
             return;
           }
 
           // check if "response" property included
-          if (evt.data.hasOwnProperty("response")) {
+          if ( evt.data.hasOwnProperty( "response" ) ) {
             // successful response provided so bypass localStorage retrieval and process the response
-            this._validateResponse(evt.data.response);
+            this._validateResponse( evt.data.response );
           }
         }
 
       },
 
-      _makeFeedParserRequest: function () {
+      _makeFeedParserRequest: function() {
         this._feedParserRequestUrl = this._feedParserUrl + this.url;
         this.$.feedParserRequest.generateRequest();
       },
 
-      _handleFeedParserRequest: function (e, resp) {
-        if (resp && resp.response) {
-          this._validateResponse(resp.response);
-        }
-        else {
+      _handleFeedParserRequest: function( e, resp ) {
+        if ( resp && resp.response ) {
+          this._validateResponse( resp.response );
+        } else {
           this._startTimer();
         }
       },
 
-      _handleFeedParserRequestError: function (e, resp) {
-        this._handleRequestError(resp);
+      _handleFeedParserRequestError: function( e, resp ) {
+        this._handleRequestError( resp );
       },
 
-      _postMessage: function () {
+      _postMessage: function() {
         var message = {
           type: OFFLINE_MESSAGE_TYPE,
           url: this.url
         };
 
-        offlineWindow.postMessage(message, offlineOrigin);
+        offlineWindow.postMessage( message, offlineOrigin );
       },
 
       // Element Lifecycle
 
-      ready: function () {
+      ready: function() {
         var self = this,
           params = {
             event: "ready"
           };
 
         // only include usage_type if it's a valid usage value
-        if (this._isValidUsage(this.usage)) {
+        if ( this._isValidUsage( this.usage ) ) {
           params.usage_type = this.usage;
         }
 
         params.version = rssVersion;
 
         // log usage
-        this.$.logger.log(BQ_TABLE_NAME, params);
+        this.$.logger.log( BQ_TABLE_NAME, params );
 
         // listen for message event on window which will be heard if running in Offline Player
-        window.addEventListener("message", function (evt) {
-          self._handleOfflineMessage(evt);
-        });
+        window.addEventListener( "message", function( evt ) {
+          self._handleOfflineMessage( evt );
+        } );
       },
 
       /**
@@ -357,7 +355,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
        *
        */
       go: function() {
-        if (offlineWindow) {
+        if ( offlineWindow ) {
           // running in Offline Player
           this._postMessage();
         } else {
@@ -365,6 +363,6 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         }
       }
 
-    });
-  })();
+    } );
+  } )();
 </script>
