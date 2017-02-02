@@ -1,0 +1,34 @@
+{
+  "name": "rise-rss",
+  "version": "1.4.3",
+  "authors": [
+    "Stuart Lees <stuart.lees@risevision.com>"
+  ],
+  "description": "Rise Vision web component for retrieving RSS feed data",
+  "main": "rise-rss.html",
+  "keywords": [
+    "polymer",
+    "web-components",
+    "rss"
+  ],
+  "license": "GPLv3",
+  "homepage": "https://github.com/Rise-Vision/rise-rss",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "test"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.0.0",
+    "iron-ajax": "PolymerElements/iron-ajax#^1.0.0",
+    "rise-logger": "https://github.com/Rise-Vision/rise-logger.git#1.0.4",
+    "underscore": "~1.8.2"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "rise-page": "https://github.com/Rise-Vision/rise-page.git",
+    "rise-playlist": "https://github.com/Rise-Vision/rise-playlist.git",
+    "rise-playlist-item": "https://github.com/Rise-Vision/rise-playlist-item.git",
+    "web-component-tester": "*"
+  }
+}

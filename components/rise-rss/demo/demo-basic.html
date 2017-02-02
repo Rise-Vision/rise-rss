@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>rise-rss Demo</title>
+
+  <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="../rise-rss.html">
+
+</head>
+<body>
+
+<p>An example of <code>&lt;rise-rss&gt;</code>:</p>
+
+<rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="3"></rise-rss>
+
+<script>
+  ( function() {
+    /* eslint-disable no-console */
+
+    "use strict";
+
+    function webComponentsReady() {
+      var rss = document.querySelector( "rise-rss" );
+
+      window.removeEventListener( "WebComponentsReady", webComponentsReady );
+
+      rss.addEventListener( "rise-rss-response", function( e ) {
+        console.log( e.detail.feed );
+      } );
+
+      rss.addEventListener( "rise-rss-error", function( e ) {
+        console.log( e.detail );
+      } );
+
+      rss.go();
+
+    }
+
+    window.addEventListener( "WebComponentsReady", webComponentsReady );
+
+    /* eslint-enable no-console */
+
+  } )();
+</script>
+
+</body>
+</html>

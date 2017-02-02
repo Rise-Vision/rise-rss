@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>rise-rss Demo</title>
+
+  <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="../../rise-page/rise-page.html">
+  <link rel="import" href="../../rise-playlist/rise-playlist.html">
+  <link rel="import" href="../../rise-playlist-item/rise-playlist-item.html">
+  <link rel="import" href="../rise-rss.html">
+
+  <style>
+    .rss-container {
+      width: 100%;
+      height: 600px;
+      padding: 10px;
+      position: relative;
+      overflow: auto;
+    }
+  </style>
+
+</head>
+<body>
+
+<p>An example of <code>&lt;rise-rss&gt;</code>:</p>
+
+<rise-page display-id="VGZUDDWYAZHY">
+
+  <rise-playlist id="playlist">
+
+    <rise-playlist-item>
+      <rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="3">
+        <!-- Example HTML structure -->
+        <div class="rss-container">
+          <!-- feed title -->
+          <h2></h2>
+          <!-- feed items -->
+          <div class="items"></div>
+        </div>
+      </rise-rss>
+    </rise-playlist-item>
+
+  </rise-playlist>
+
+</rise-page>
+
+<!-- Importing javascript which is the logic in building and managing the RSS content -->
+<script type="text/javascript" src="demo-content.js"></script>
+
+<script>
+  /* global DemoContent */
+
+  ( function() {
+    "use strict";
+
+    /*
+     NOTE: This is purely for demonstrative purposes on how to set up the component. This standalone demo page will
+     not work as the component requires to be used within Rise Vision Chrome App Player or Offline Player.
+     */
+
+    function webComponentsReady() {
+      // new instance of DemoContent object
+      var content = new DemoContent();
+
+      window.removeEventListener( "WebComponentsReady", webComponentsReady );
+
+      // initialize the content
+      content.init();
+    }
+
+    window.addEventListener( "WebComponentsReady", webComponentsReady );
+
+  } )();
+</script>
+
+</body>
+</html>
