@@ -1,6 +1,6 @@
 {
   "name": "rise-rss",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Rise Vision web component for retrieving RSS feed data",
   "scripts": {
     "test": "gulp test",
