@@ -1,6 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-ajax/iron-ajax.html">
 <link rel="import" href="../rise-logger/rise-logger.html">
+<link rel="import" href="../rise-data/rise-data.html">
 
 <script src="../underscore/underscore.js"></script>
 
@@ -50,6 +51,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 <dom-module id="rise-rss">
   <template>
     <rise-logger id="logger"></rise-logger>
+    <rise-data id="data" endpoint="rss"></rise-data>
     <iron-ajax id="feedParserRequest"
                url="{{_feedParserRequestUrl}}"
                handle-as="json"
@@ -57,11 +59,12 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
                on-error="_handleFeedParserRequestError"
                verbose="true">
     </iron-ajax>
+    <content></content>
   </template>
 </dom-module>
 
 <!-- build:version -->
-<script>var rssVersion = "1.4.3";</script>
+<script>var rssVersion = "1.5.0";</script>
 <!-- endbuild -->
 
 <script>
@@ -77,14 +80,6 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
       BQ_TABLE_NAME = "component_rss_events",
       offlineWindow,
       offlineOrigin;
-
-    function supportsLocalStorage() {
-      try {
-        return "localStorage" in window && window.localStorage !== null;
-      } catch ( e ) {
-        return false;
-      }
-    }
 
     Polymer( {
       is: "rise-rss",
@@ -161,29 +156,23 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         return usage === "standalone" || usage === "widget";
       },
 
-      _getLocalStorageKey: function() {
+      _getDataCacheKey: function() {
         return LOCAL_STORAGE_NAME + "_" + window.btoa( encodeURIComponent( escape( this.url ) ) ) + "_" + this.entries;
       },
 
-      _getCachedData: function() {
-        if ( supportsLocalStorage() ) {
-          // retrieve cached data and parse back
-          return JSON.parse( localStorage.getItem( this._getLocalStorageKey() ) );
-        }
-
-        return null;
+      _getCachedData: function( cb ) {
+        this.$.data.getItem( this._getDataCacheKey(), function( cachedData ) {
+          cb( cachedData )
+        } );
       },
 
       _setCachedData: function( data ) {
-        console.log( this._getLocalStorageKey() ); // eslint-disable-line no-console
+        var cacheObj = {};
 
-        if ( supportsLocalStorage() ) {
-          try {
-            localStorage.setItem( this._getLocalStorageKey(), JSON.stringify( data ) );
-          } catch ( e ) {
-            console.warn( e.message ); // eslint-disable-line no-console
-          }
-        }
+        cacheObj.data = data;
+
+        this.$.data.saveItem( this._getDataCacheKey(), cacheObj );
+
       },
 
       _prepareResponse: function( items ) {
@@ -225,12 +214,16 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
       },
 
       _handleRequestError: function( errors ) {
-        if ( !this._respondWithCacheData() ) {
-          // no cached data available, process the error
-          this.results = {};
-          this._startTimer();
-          this.fire( "rise-rss-error", errors );
-        }
+        var self = this;
+
+        this._respondWithCacheData( function( isCachedData ) {
+          if ( !isCachedData ) {
+            // no cached data available, process the error
+            self.results = {};
+            self._startTimer();
+            self.fire( "rise-rss-error", errors );
+          }
+        } );
       },
 
       _handleRequestSuccess: function( items ) {
@@ -252,19 +245,22 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         }
       },
 
-      _respondWithCacheData: function() {
-        var hasCacheData = false,
-          cachedData = this._getCachedData();
+      _respondWithCacheData: function( cb ) {
+        var self = this;
 
-        if ( cachedData ) {
-          hasCacheData = true;
-          this.results = cachedData.feed;
-          // start refresh timer and fire the event using the cached data
-          this._startTimer();
-          this.fire( "rise-rss-response", cachedData );
-        }
+        this._getCachedData( function( cachedData ) {
+          var hasCacheData = false;
 
-        return hasCacheData;
+          if ( cachedData ) {
+            hasCacheData = true;
+            self.results = cachedData.data.feed;
+            // start refresh timer and fire the event using the cached data
+            self._startTimer();
+            self.fire( "rise-rss-response", cachedData.data );
+          }
+
+          cb( hasCacheData );
+        } );
       },
 
       _handleOfflineMessage: function( evt ) {

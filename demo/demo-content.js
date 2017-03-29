@@ -40,9 +40,6 @@ var DemoContent = function() {
       stories = [],
       story = null;
 
-    // displaying the title of the RSS feed
-    document.querySelector( ".rss-container h2" ).innerHTML = data.title;
-
     // loop through entries in data and construct markup
     data.items.forEach( function( entry ) {
       var title,
