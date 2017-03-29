@@ -17,13 +17,12 @@
 
 
 <script src="data/json-rss.js"></script>
-<script src="data/json-rss2.js"></script>
 <script src="mocks/makeRequest.js"></script>
 <script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
 <script src="../node_modules/widget-tester/mocks/localStorage-mock.js"></script>
 
 <script>
-  /* global sinon, suite, test, assert, setup, teardown, suiteSetup, suiteTeardown, jsonRSS, jsonRSS2 */
+  /* global sinon, suite, test, assert, setup, teardown, suiteSetup, suiteTeardown, jsonRSS */
 
   var rssRequest = document.querySelector( "#request" ),
     rssRequest2 = document.querySelector( "#request2" ),
@@ -274,14 +273,15 @@
 
     suite( "_getCachedData", function() {
       test( "should fire rise-rss-response when cached data exists", ( done ) => {
-        let listener = ( response ) => {
-          console.log(response.detail);
+        var listener = ( response ) => {
+
           assert.deepEqual( response.detail, { feed: jsonRSS } );
           rssRequest.removeEventListener( "rise-rss-response", listener );
           rssRequest.$.data.getItem.restore();
           done();
         };
-        sinon.stub( rssRequest.$.data, "getItem", ( key, cb ) => {
+
+        sinon.stub( rssRequest.$.data, "getItem", function( key, cb ) {
           return cb( {
             data: { feed: jsonRSS },
           } );
@@ -402,9 +402,9 @@
 
     suite( "_handleRequestError", function() {
 
-      setup( function () {
-        rssRequest.results = {};
-      });
+      setup( function() {
+        rssRequest.results = { };
+      } );
 
       test( "should fire rise-rss-error if there is a problem with the gadgets.io.makeRequest response", function( done ) {
         var errors = [
@@ -419,7 +419,7 @@
             done();
           };
 
-        sinon.stub( rssRequest.$.data, "getItem", ( key, cb ) => {
+        sinon.stub( rssRequest.$.data, "getItem", function( key, cb ) {
           return cb( null );
         } );
 
