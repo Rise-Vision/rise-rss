@@ -152,6 +152,10 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
       _feedParserRequestUrl: "",
 
+      _dataPingReceived: false,
+
+      _requestWaiting: false,
+
       _isValidUsage: function( usage ) {
         return usage === "standalone" || usage === "widget";
       },
@@ -322,6 +326,14 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         offlineWindow.postMessage( message, offlineOrigin );
       },
 
+      _onDataPingReceived: function() {
+        this._dataPingReceived = true;
+        if ( this._requestWaiting ) {
+          this._requestWaiting = false;
+          this.go();
+        }
+      },
+
       // Element Lifecycle
 
       ready: function() {
@@ -329,6 +341,11 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
           params = {
             event: "ready"
           };
+
+        // listen for data ping received
+        this.$.data.addEventListener( "rise-data-ping-received", function() {
+          self._onDataPingReceived();
+        } );
 
         // only include usage_type if it's a valid usage value
         if ( this._isValidUsage( this.usage ) ) {
@@ -351,11 +368,22 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
        *
        */
       go: function() {
+        var self = this;
+
         if ( offlineWindow ) {
           // running in Offline Player
           this._postMessage();
         } else {
-          this._makeFeedParserRequest();
+
+          if ( this._dataPingReceived ) {
+            this._respondWithCacheData( function( isCachedData ) {
+              if ( !isCachedData ) {
+                self._makeFeedParserRequest();
+              }
+            } );
+          } else {
+            this._requestWaiting = true;
+          }
         }
       }
 

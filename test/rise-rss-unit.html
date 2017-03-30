@@ -211,6 +211,29 @@
       } );
     } );
 
+    suite( "_onDataPingReceived", function() {
+      setup( function() {
+        rssRequest._dataPingReceived = false;
+      } );
+      suiteTeardown( function() {
+        rssRequest._dataPingReceived = false;
+        rssRequest._requestWaiting = false;
+      } );
+      test( "should set value", function() {
+        rssRequest._onDataPingReceived();
+        assert.isTrue( rssRequest._dataPingReceived );
+      } );
+      test( "should call go() if request waiting", function() {
+        var goStub = sinon.stub( rssRequest, "go" );
+
+        rssRequest._requestWaiting = true;
+        rssRequest._onDataPingReceived();
+        assert.isFalse( rssRequest._requestWaiting );
+        assert.isTrue( goStub.calledOnce );
+        goStub.restore();
+      } );
+    } );
+
     // // ********************** Offline Player specific tests  ***********************
 
     suite( "go", function() {
@@ -219,14 +242,54 @@
         localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
       } );
 
-      test( "should call _makeFeedParserRequest", function() {
+      test( "should not make call to generate request if data ping has not been received", function() {
         var makeFeedParserRequestSpy = sinon.spy( rssRequest, "_makeFeedParserRequest" );
+
+        rssRequest.go();
+        assert.equal( makeFeedParserRequestSpy.callCount, 0 );
+        assert.isTrue( rssRequest._requestWaiting );
+
+        rssRequest._makeFeedParserRequest.restore();
+
+      } );
+
+      test( "should call _makeFeedParserRequest if data ping has been received and there is no cached data", function() {
+        var makeFeedParserRequestSpy = sinon.spy( rssRequest, "_makeFeedParserRequest" );
+
+        rssRequest._dataPingReceived = true;
+
+        sinon.stub( rssRequest.$.data, "getItem", function( key, cb ) {
+          return cb( null );
+        } );
 
         rssRequest.go();
 
         assert( makeFeedParserRequestSpy.calledOnce );
 
         rssRequest._makeFeedParserRequest.restore();
+        rssRequest.$.data.getItem.restore();
+        rssRequest._dataPingReceived = false;
+
+      } );
+
+      test( "should not call _makeFeedParserRequest if data ping has been received and there is cached data", function() {
+        var makeFeedParserRequestSpy = sinon.spy( rssRequest, "_makeFeedParserRequest" );
+
+        rssRequest._dataPingReceived = true;
+
+        sinon.stub( rssRequest.$.data, "getItem", function( key, cb ) {
+          return cb( {
+            data: { feed: jsonRSS },
+          } );
+        } );
+
+        rssRequest.go();
+
+        assert.equal( makeFeedParserRequestSpy.callCount, 0 );
+
+        rssRequest._makeFeedParserRequest.restore();
+        rssRequest.$.data.getItem.restore();
+        rssRequest._dataPingReceived = false;
 
       } );
 
