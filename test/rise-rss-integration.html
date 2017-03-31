@@ -19,7 +19,7 @@
 <script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
 <script>
 
-  /* global sinon, suite, test, assert, setup, suiteSetup, suiteTeardown, jsonRSS */
+  /* global sinon, suite, test, assert, setup, suiteSetup, suiteTeardown, jsonRSS, teardown */
 
   var rssRequest = document.querySelector( "#request" ),
     display = "abc123";
@@ -53,6 +53,15 @@
     setup( function() {
       server.respondWith( "GET", "https://feed-parser.risevision.com/http://feed.xml",
         [ 200, header, JSON.stringify( jsonRSS ) ] );
+
+      sinon.stub( rssRequest.$.data, "getItem", function( key, cb ) {
+        cb( null );
+      } );
+      rssRequest._onDataPingReceived();
+    } );
+
+    teardown( function() {
+      rssRequest.$.data.getItem.restore();
     } );
 
     suite( "response object", function() {
