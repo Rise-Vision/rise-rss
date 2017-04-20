@@ -334,7 +334,7 @@
       } );
     } );
 
-    suite( "_getCachedData", function() {
+    suite( "_respondWithCacheData", function() {
       test( "should fire rise-rss-response when cached data exists", ( done ) => {
         var listener = ( response ) => {
 
@@ -352,6 +352,28 @@
         rssRequest.addEventListener( "rise-rss-response", listener );
         rssRequest._handleRequestError();
       } );
+
+      test( "should be backwards compatible with previous saved data structure in localStorage", ( done ) => {
+
+        var listener = ( response ) => {
+
+          assert.deepEqual( response.detail, { feed: jsonRSS } );
+          rssRequest.removeEventListener( "rise-rss-response", listener );
+          rssRequest.$.data.getItem.restore();
+          done();
+        };
+
+        sinon.stub( rssRequest.$.data, "getItem", function( key, cb ) {
+          return cb( {
+            feed: jsonRSS
+          } );
+        } );
+
+        rssRequest.addEventListener( "rise-rss-response", listener );
+        rssRequest._respondWithCacheData( function() {} );
+
+      } );
+
     } );
 
     suite( "_postMessage", function() {

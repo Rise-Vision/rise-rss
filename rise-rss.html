@@ -64,7 +64,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 </dom-module>
 
 <!-- build:version -->
-<script>var rssVersion = "1.5.1";</script>
+<script>var rssVersion = "1.5.2";</script>
 <!-- endbuild -->
 
 <script>
@@ -257,10 +257,11 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
           if ( cachedData ) {
             hasCacheData = true;
-            self.results = cachedData.data.feed;
+            // account for backwards compatibility of previous saved data structure in localStorage
+            self.results = ( cachedData.data ) ? cachedData.data.feed : cachedData.feed;
             // start refresh timer and fire the event using the cached data
             self._startTimer();
-            self.fire( "rise-rss-response", cachedData.data );
+            self.fire( "rise-rss-response", ( cachedData.data ) ? cachedData.data : cachedData );
           }
 
           cb( hasCacheData );
