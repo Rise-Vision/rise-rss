@@ -160,6 +160,18 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         return usage === "standalone" || usage === "widget";
       },
 
+      _isRiseCacheSchemeEnabled: function() {
+        try {
+          if ( top.enableRiseCacheScheme ) {
+            return true;
+          }
+        } catch ( err ) {
+          console.log( "rise-logger._isRiseCacheSchemeEnabled", err ); // eslint-disable-line no-console
+        }
+
+        return false;
+      },
+
       _getDataCacheKey: function() {
         return LOCAL_STORAGE_NAME + "_" + window.btoa( encodeURIComponent( escape( this.url ) ) ) + "_" + this.entries;
       },

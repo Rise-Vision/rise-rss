@@ -75,6 +75,22 @@
 
     } );
 
+    suite( "_isRiseCacheSchemeEnabled", function() {
+
+      test( "should return false if top window flag doesn't exist", function() {
+        assert.isFalse( rssRequest._isRiseCacheSchemeEnabled() );
+      } );
+
+      test( "should return true if last event is throttled", function() {
+        top.enableRiseCacheScheme = true;
+
+        assert.isTrue( rssRequest._isRiseCacheSchemeEnabled() );
+
+        top.enableRiseCacheScheme = false;
+      } );
+
+    } );
+
     suite( "_handleRequestSuccess", function() {
       test( "should fire rise-rss-response and provide a Javascript object representation of a feed", function( done ) {
 
