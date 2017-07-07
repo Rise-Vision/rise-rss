@@ -64,7 +64,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 </dom-module>
 
 <!-- build:version -->
-<script>var rssVersion = "1.5.6";</script>
+<script>var rssVersion = "1.5.7";</script>
 <!-- endbuild -->
 
 <script>
@@ -313,9 +313,38 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
       },
 
+      _makeFeedParserFetchRequest: function() {
+        var init = {
+            method: "GET",
+            mode: "cors",
+            cache: "no-cache"
+          },
+          req = new Request( this._feedParserRequestUrl, init ),
+          that = this;
+
+        fetch( req ).then( function( response ) {
+          if ( response.ok ) {
+            return Promise.resolve( response );
+          } else {
+            return Promise.reject( new Error( response.statusText ) );
+          }
+        } ).then( function( response ) {
+          return response.json();
+        } ).then( function( json ) {
+          that._validateResponse( json );
+        } ).catch( function( error ) {
+          that._handleRequestError( error );
+        } );
+      },
+
       _makeFeedParserRequest: function() {
         this._feedParserRequestUrl = this._feedParserUrl + this.url;
-        this.$.feedParserRequest.generateRequest();
+
+        if ( this._isRiseCacheSchemeEnabled() ) {
+          this._makeFeedParserFetchRequest();
+        } else {
+          this.$.feedParserRequest.generateRequest();
+        }
       },
 
       _handleFeedParserRequest: function( e, resp ) {
