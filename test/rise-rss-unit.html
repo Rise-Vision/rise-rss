@@ -75,6 +75,22 @@
 
     } );
 
+    suite( "_isRiseCacheSchemeEnabled", function() {
+
+      test( "should return false if top window flag doesn't exist", function() {
+        assert.isFalse( rssRequest._isRiseCacheSchemeEnabled() );
+      } );
+
+      test( "should return true if last event is throttled", function() {
+        top.enableRiseCacheScheme = true;
+
+        assert.isTrue( rssRequest._isRiseCacheSchemeEnabled() );
+
+        top.enableRiseCacheScheme = false;
+      } );
+
+    } );
+
     suite( "_handleRequestSuccess", function() {
       test( "should fire rise-rss-response and provide a Javascript object representation of a feed", function( done ) {
 
@@ -232,6 +248,42 @@
         assert.isTrue( goStub.calledOnce );
         goStub.restore();
       } );
+    } );
+
+    suite( "_makeFeedParserRequest", function() {
+      var requestStub,
+        fetchStub;
+
+      setup( function() {
+        requestStub = sinon.stub( rssRequest.$.feedParserRequest, "generateRequest" );
+        fetchStub = sinon.stub( rssRequest, "_makeFeedParserFetchRequest" );
+      } );
+
+      teardown( function() {
+        requestStub.restore();
+        fetchStub.restore();
+      } );
+
+      test( "should use iron-ajax to request to Feed Parser", function() {
+        rssRequest._makeFeedParserRequest();
+
+        assert.isTrue( requestStub.calledOnce );
+        assert.equal( fetchStub.callCount, 0 );
+      } );
+
+      test( "should use Fetch to request to Feed Parser", function() {
+        sinon.stub( rssRequest, "_isRiseCacheSchemeEnabled", function() {
+          return true;
+        } );
+
+        rssRequest._makeFeedParserRequest();
+
+        assert.equal( requestStub.callCount, 0 );
+        assert.isTrue( fetchStub.calledOnce );
+
+        rssRequest._isRiseCacheSchemeEnabled.restore();
+      } );
+
     } );
 
     // // ********************** Offline Player specific tests  ***********************
