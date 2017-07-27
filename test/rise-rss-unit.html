@@ -227,6 +227,24 @@
       } );
     } );
 
+    suite( "_onDisplayIdReceived", () => {
+
+      teardown( () => {
+        rssRequest._storageType = "session";
+      } );
+
+      test( "should set the storageType to  local", () => {
+        rssRequest._onDisplayIdReceived( "abc123" );
+        assert.equal( "local", rssRequest._storageType );
+      } );
+
+      test( "should set the storageType to session", () => {
+        rssRequest._onDisplayIdReceived( {} );
+        assert.equal( "session", rssRequest._storageType );
+      } );
+
+    } );
+
     suite( "_onDataPingReceived", function() {
       setup( function() {
         rssRequest._dataPingReceived = false;
