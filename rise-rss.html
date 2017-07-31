@@ -51,7 +51,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 <dom-module id="rise-rss">
   <template>
     <rise-logger id="logger"></rise-logger>
-    <rise-data id="data" endpoint="rss"></rise-data>
+    <rise-data id="data" endpoint="rss" storage-type="{{_storageType}}"></rise-data>
     <iron-ajax id="feedParserRequest"
                url="{{_feedParserRequestUrl}}"
                handle-as="json"
@@ -64,7 +64,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 </dom-module>
 
 <!-- build:version -->
-<script>var rssVersion = "1.5.7";</script>
+<script>var rssVersion = "1.5.8";</script>
 <!-- endbuild -->
 
 <script>
@@ -155,6 +155,26 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
       _dataPingReceived: false,
 
       _requestWaiting: false,
+
+      _displayIdReceived: false,
+
+      _goPending: true,
+
+      _storageType: "session",
+
+      _onDisplayIdReceived( displayId ) {
+        this._displayIdReceived = true;
+
+        if ( displayId && typeof displayId === "string" ) {
+          this._storageType = "local";
+        } else {
+          this._storageType = "session";
+        }
+
+        if ( this._goPending ) {
+          this.go();
+        }
+      },
 
       _isValidUsage: function( usage ) {
         return usage === "standalone" || usage === "widget";
@@ -389,6 +409,11 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
           self._onDataPingReceived();
         } );
 
+        // listen for logger display id received
+        this.$.logger.addEventListener( "rise-logger-display-id", ( e ) => {
+          this._onDisplayIdReceived( e.detail );
+        } );
+
         // only include usage_type if it's a valid usage value
         if ( this._isValidUsage( this.usage ) ) {
           params.usage_type = this.usage;
@@ -411,6 +436,13 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
        */
       go: function() {
         var self = this;
+
+        if ( !this._displayIdReceived ) {
+          this._goPending = true;
+          return;
+        }
+
+        this._goPending = false;
 
         if ( offlineWindow ) {
           // running in Offline Player
