@@ -410,8 +410,8 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         } );
 
         // listen for logger display id received
-        this.$.logger.addEventListener( "rise-logger-display-id", ( e ) => {
-          this._onDisplayIdReceived( e.detail );
+        this.$.logger.addEventListener( "rise-logger-display-id", function( e ) {
+          self._onDisplayIdReceived( e.detail );
         } );
 
         // only include usage_type if it's a valid usage value
