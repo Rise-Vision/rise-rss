@@ -64,7 +64,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 </dom-module>
 
 <!-- build:version -->
-<script>var rssVersion = "1.5.8";</script>
+<script>var rssVersion = "1.5.9";</script>
 <!-- endbuild -->
 
 <script>
@@ -162,7 +162,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
       _storageType: "session",
 
-      _onDisplayIdReceived( displayId ) {
+      _onDisplayIdReceived: function( displayId ) {
         this._displayIdReceived = true;
 
         if ( displayId && typeof displayId === "string" ) {
@@ -410,8 +410,8 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         } );
 
         // listen for logger display id received
-        this.$.logger.addEventListener( "rise-logger-display-id", ( e ) => {
-          this._onDisplayIdReceived( e.detail );
+        this.$.logger.addEventListener( "rise-logger-display-id", function( e ) {
+          self._onDisplayIdReceived( e.detail );
         } );
 
         // only include usage_type if it's a valid usage value
