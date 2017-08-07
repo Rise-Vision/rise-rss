@@ -162,7 +162,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
       _storageType: "session",
 
-      _onDisplayIdReceived( displayId ) {
+      _onDisplayIdReceived: function( displayId ) {
         this._displayIdReceived = true;
 
         if ( displayId && typeof displayId === "string" ) {
