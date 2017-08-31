@@ -6,8 +6,6 @@
 
 The specified feed is periodically retrieved if the `refresh` attribute is set, although a minimum refresh time of 1 minute is enforced.
 
-At this time the RSS Web Component is only compatible with the Rise Vision [Offline Player](https://github.com/Rise-Vision/offline-player) and Chrome is the only browser that this project and Rise Vision supports.
-
 ### Entries
 Entries from an RSS feed can optionally be limited to a specific amount.
 
@@ -248,8 +246,6 @@ Now in your browser, navigate to:
 ```
 localhost:8080/components/rise-rss/demo/index.html
 ``` 
-
-Please note that the demo is purely for demonstrative purposes on how to set up the component. At this time, the standalone demo page will not work as the `rise-rss` component can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vision/offline-player). 
 
 ### Testing
 You can run the suite of tests either by command terminal or via a local web server using Polyserve. 
