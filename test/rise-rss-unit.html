@@ -17,8 +17,6 @@
 
 
 <script src="data/json-rss.js"></script>
-<script src="mocks/makeRequest.js"></script>
-<script src="../node_modules/widget-tester/mocks/gadgets.io-mock.js"></script>
 <script src="../node_modules/widget-tester/mocks/localStorage-mock.js"></script>
 
 <script>
@@ -201,18 +199,6 @@
         logStub.restore();
       } );
 
-      test( "should successfully listen for 'message' event", function() {
-        var handleMessageSpy = sinon.spy( rssRequest, "_handleOfflineMessage" ),
-          event = new CustomEvent( "message" );
-
-        window.dispatchEvent( event );
-
-        assert( handleMessageSpy.calledOnce );
-
-        rssRequest._handleOfflineMessage.restore();
-
-      } );
-
       test( "should log usage", function() {
         rssRequest.ready();
         assert.equal( logStub.args[ 0 ][ 0 ], "component_rss_events" );
@@ -304,8 +290,6 @@
 
     } );
 
-    // // ********************** Offline Player specific tests  ***********************
-
     suite( "go", function() {
 
       teardown( function() {
@@ -360,25 +344,6 @@
         rssRequest._makeFeedParserRequest.restore();
         rssRequest.$.data.getItem.restore();
         rssRequest._dataPingReceived = false;
-
-      } );
-
-      test( "should call _postMessage", function() {
-        var postMessageSpy = sinon.spy( rssRequest, "_postMessage" ),
-          regEvent = {
-            data: "register.chrome.app.window",
-            origin: "testorigin",
-            source: {
-              postMessage: function() {}
-            }
-          };
-
-        rssRequest._handleOfflineMessage( regEvent );
-        rssRequest.go();
-
-        assert( postMessageSpy.calledOnce );
-
-        rssRequest._postMessage.restore();
 
       } );
 
@@ -442,115 +407,6 @@
         rssRequest.addEventListener( "rise-rss-response", listener );
         rssRequest._respondWithCacheData( function() {} );
 
-      } );
-
-    } );
-
-    suite( "_postMessage", function() {
-
-      teardown( function() {
-        localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
-      } );
-
-      test( "should have instance of Offline Player main window call 'postMessage' with correct params", function() {
-        var regEvent = {
-            data: "register.chrome.app.window",
-            origin: "testorigin",
-            source: {
-              postMessage: function() {}
-            }
-          },
-          message = {
-            type: "bypasscors",
-            url: rssRequest.url
-          },
-          offlinePostMessage = sinon.spy( regEvent.source, "postMessage" );
-
-        rssRequest._handleOfflineMessage( regEvent );
-        rssRequest._postMessage();
-
-        assert( offlinePostMessage.calledWithExactly( message, regEvent.origin ) );
-
-        regEvent.source.postMessage.restore();
-
-      } );
-
-    } );
-
-    suite( "_handleOfflineMessage", function() {
-
-      var regEvent = {
-          data: "register.chrome.app.window",
-          origin: "testorigin",
-          source: {
-            postMessage: function() {}
-          }
-        },
-        validateSpy,
-        handleErrorSpy,
-        postMessageSpy;
-
-      teardown( function() {
-        localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
-      } );
-
-      test( "should not make any function calls", function() {
-        validateSpy = sinon.spy( rssRequest, "_validateResponse" );
-        handleErrorSpy = sinon.spy( rssRequest, "_handleRequestError" );
-
-        rssRequest._handleOfflineMessage( regEvent );
-
-        assert.equal( validateSpy.callCount, 0 );
-        assert.equal( handleErrorSpy.callCount, 0 );
-
-        rssRequest._validateResponse.restore();
-        rssRequest._handleRequestError.restore();
-      } );
-
-      test( "should call _postMessage from pending request", function() {
-        postMessageSpy = sinon.spy( rssRequest, "_postMessage" );
-
-        rssRequest._offlineRequestPending = true;
-        rssRequest._handleOfflineMessage( regEvent );
-
-        assert( postMessageSpy.calledOnce );
-
-        rssRequest._postMessage.restore();
-        rssRequest._offlineRequestPending = false;
-      } );
-
-      test( "should call _validateResponse with response value", function() {
-        var messageResponse = {
-          data: {
-            response: "[{}]"
-          }
-        };
-
-        validateSpy = sinon.spy( rssRequest, "_validateResponse" );
-
-        rssRequest._handleOfflineMessage( regEvent );
-        rssRequest._handleOfflineMessage( messageResponse );
-
-        assert( validateSpy.calledWith( messageResponse.data.response ) );
-
-        rssRequest._validateResponse.restore();
-      } );
-
-      test( "should call _handleRequestError with error value", function() {
-        var errorResponse = {
-          data: {
-            error: "Test error"
-          }
-        };
-
-        handleErrorSpy = sinon.spy( rssRequest, "_handleRequestError" );
-
-        rssRequest._handleOfflineMessage( regEvent );
-        rssRequest._handleOfflineMessage( errorResponse );
-
-        assert( handleErrorSpy.calledWith( errorResponse.data.error ) );
-
-        rssRequest._handleRequestError.restore();
       } );
 
     } );

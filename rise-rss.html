@@ -11,9 +11,6 @@
 The specified feed is periodically retrieved if the `refresh` attribute is set, although a minimum refresh
 time of 1 minute is enforced.
 
-At this time the RSS Web Component is only compatible with the Rise Vision
-[Offline Player](https://github.com/Rise-Vision/offline-player).
-
 #### Example Usage
 
     <rise-rss id="rss" url="http://rss.cbc.ca/lineup/topstories.xml" entries="3"></rise-rss>
@@ -40,10 +37,6 @@ an `entries` attribute should be added to the `<rise-rss>` element.
 For example, to limit the amount of entries to 5:
 
     <rise-rss url="http://example.com/rss.xml" entries="5"></rise-rss>
-
-Please note that the demo provided in this documentation is purely for demonstrative purposes on
-how to set up the component. At this time, the demo page will not work as the `rise-rss` component
-can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vision/offline-player).
 
 @demo
 -->
@@ -74,12 +67,8 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
     "use strict";
 
-    var OFFLINE_REGISTRATION = "register.chrome.app.window",
-      OFFLINE_MESSAGE_TYPE = "bypasscors",
-      LOCAL_STORAGE_NAME = "riserss",
-      BQ_TABLE_NAME = "component_rss_events",
-      offlineWindow,
-      offlineOrigin;
+    var LOCAL_STORAGE_NAME = "riserss",
+      BQ_TABLE_NAME = "component_rss_events";
 
     Polymer( {
       is: "rise-rss",
@@ -145,8 +134,6 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
        *
        * @event rise-rss-error
        */
-
-      _offlineRequestPending: false,
 
       _feedParserUrl: "https://feed-parser.risevision.com/",
 
@@ -235,7 +222,7 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
       },
 
       _startTimer: function() {
-        var refreshFn = ( offlineWindow ) ? this._postMessage : this._makeFeedParserRequest,
+        var refreshFn = this._makeFeedParserRequest,
           self = this;
 
         this.refresh = parseInt( this.refresh, 10 );
@@ -300,39 +287,6 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         } );
       },
 
-      _handleOfflineMessage: function( evt ) {
-        if ( evt.data === OFFLINE_REGISTRATION ) {
-          // store the main window of the offline player
-          offlineWindow = evt.source;
-
-          // store the origin for future "postMessage" calls on the offlineWindow
-          offlineOrigin = evt.origin;
-
-          if ( this._offlineRequestPending ) {
-            // go() was previously called before this registration message was received, execute _postMessage()
-            this._offlineRequestPending = false;
-            this._postMessage();
-          }
-
-          return;
-        }
-
-        if ( offlineWindow ) {
-          // check if "error" property was included
-          if ( evt.data.hasOwnProperty( "error" ) && typeof evt.data.error !== "undefined" && evt.data.error !== "" ) {
-            this._handleRequestError( evt.data.error );
-            return;
-          }
-
-          // check if "response" property included
-          if ( evt.data.hasOwnProperty( "response" ) ) {
-            // successful response provided so bypass localStorage retrieval and process the response
-            this._validateResponse( evt.data.response );
-          }
-        }
-
-      },
-
       _makeFeedParserFetchRequest: function() {
         var init = {
             method: "GET",
@@ -379,15 +333,6 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
         this._handleRequestError( resp );
       },
 
-      _postMessage: function() {
-        var message = {
-          type: OFFLINE_MESSAGE_TYPE,
-          url: this.url
-        };
-
-        offlineWindow.postMessage( message, offlineOrigin );
-      },
-
       _onDataPingReceived: function() {
         this._dataPingReceived = true;
         if ( this._requestWaiting ) {
@@ -423,11 +368,6 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
         // log usage
         this.$.logger.log( BQ_TABLE_NAME, params );
-
-        // listen for message event on window which will be heard if running in Offline Player
-        window.addEventListener( "message", function( evt ) {
-          self._handleOfflineMessage( evt );
-        } );
       },
 
       /**
@@ -444,20 +384,14 @@ can only be used within Rise Vision [Offline Player](https://github.com/Rise-Vis
 
         this._goPending = false;
 
-        if ( offlineWindow ) {
-          // running in Offline Player
-          this._postMessage();
+        if ( this._dataPingReceived ) {
+          this._respondWithCacheData( function( isCachedData ) {
+            if ( !isCachedData ) {
+              self._makeFeedParserRequest();
+            }
+          } );
         } else {
-
-          if ( this._dataPingReceived ) {
-            this._respondWithCacheData( function( isCachedData ) {
-              if ( !isCachedData ) {
-                self._makeFeedParserRequest();
-              }
-            } );
-          } else {
-            this._requestWaiting = true;
-          }
+          this._requestWaiting = true;
         }
       }
 
