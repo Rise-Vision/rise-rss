@@ -217,6 +217,7 @@
 
       teardown( () => {
         rssRequest._storageType = "session";
+        rssRequest._goPending = false;
       } );
 
       test( "should set the storageType to  local", () => {
@@ -229,26 +230,37 @@
         assert.equal( "session", rssRequest._storageType );
       } );
 
+      test( "should call go() if _goPending", function() {
+        var goStub = sinon.stub( rssRequest, "go" );
+
+        rssRequest._goPending = true;
+        rssRequest._onDisplayIdReceived();
+        assert.isTrue( goStub.calledOnce );
+        goStub.restore();
+      } );
+
     } );
 
     suite( "_onDataPingReceived", function() {
       setup( function() {
         rssRequest._dataPingReceived = false;
       } );
-      suiteTeardown( function() {
+
+      teardown( function() {
         rssRequest._dataPingReceived = false;
-        rssRequest._requestWaiting = false;
+        rssRequest._goPending = false;
       } );
+
       test( "should set value", function() {
         rssRequest._onDataPingReceived();
         assert.isTrue( rssRequest._dataPingReceived );
       } );
-      test( "should call go() if request waiting", function() {
+
+      test( "should call go() if _goPending", function() {
         var goStub = sinon.stub( rssRequest, "go" );
 
-        rssRequest._requestWaiting = true;
+        rssRequest._goPending = true;
         rssRequest._onDataPingReceived();
-        assert.isFalse( rssRequest._requestWaiting );
         assert.isTrue( goStub.calledOnce );
         goStub.restore();
       } );
@@ -296,12 +308,39 @@
         localStorage.removeItem( "riserss_aHR0cCUyNTNBJTJGJTJGZmVlZC54bWw=_15" );
       } );
 
+      test( "should not make call to generate request if url value not set", function() {
+        var makeFeedParserRequestSpy = sinon.spy( rssRequest, "_makeFeedParserRequest" );
+
+        rssRequest.url = "";
+        rssRequest.go();
+        assert.equal( makeFeedParserRequestSpy.callCount, 0 );
+        assert.isTrue( rssRequest._goPending );
+
+        rssRequest.url = "http://feed.xml";
+        rssRequest._makeFeedParserRequest.restore();
+
+      } );
+
+      test( "should not make call to generate request if display id has not been received", function() {
+        var makeFeedParserRequestSpy = sinon.spy( rssRequest, "_makeFeedParserRequest" );
+
+        rssRequest._displayIdReceived = false;
+
+        rssRequest.go();
+        assert.equal( makeFeedParserRequestSpy.callCount, 0 );
+        assert.isTrue( rssRequest._goPending );
+
+        rssRequest._displayIdReceived = true;
+        rssRequest._makeFeedParserRequest.restore();
+
+      } );
+
       test( "should not make call to generate request if data ping has not been received", function() {
         var makeFeedParserRequestSpy = sinon.spy( rssRequest, "_makeFeedParserRequest" );
 
         rssRequest.go();
         assert.equal( makeFeedParserRequestSpy.callCount, 0 );
-        assert.isTrue( rssRequest._requestWaiting );
+        assert.isTrue( rssRequest._goPending );
 
         rssRequest._makeFeedParserRequest.restore();
 

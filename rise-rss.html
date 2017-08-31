@@ -57,7 +57,7 @@ For example, to limit the amount of entries to 5:
 </dom-module>
 
 <!-- build:version -->
-<script>var rssVersion = "1.5.10";</script>
+<script>var rssVersion = "1.5.11";</script>
 <!-- endbuild -->
 
 <script>
@@ -140,8 +140,6 @@ For example, to limit the amount of entries to 5:
       _feedParserRequestUrl: "",
 
       _dataPingReceived: false,
-
-      _requestWaiting: false,
 
       _displayIdReceived: false,
 
@@ -335,8 +333,8 @@ For example, to limit the amount of entries to 5:
 
       _onDataPingReceived: function() {
         this._dataPingReceived = true;
-        if ( this._requestWaiting ) {
-          this._requestWaiting = false;
+
+        if ( this._goPending ) {
           this.go();
         }
       },
@@ -377,22 +375,18 @@ For example, to limit the amount of entries to 5:
       go: function() {
         var self = this;
 
-        if ( !this._displayIdReceived ) {
+        if ( !this.url || !this._displayIdReceived || !this._dataPingReceived ) {
           this._goPending = true;
           return;
         }
 
         this._goPending = false;
 
-        if ( this._dataPingReceived ) {
-          this._respondWithCacheData( function( isCachedData ) {
-            if ( !isCachedData ) {
-              self._makeFeedParserRequest();
-            }
-          } );
-        } else {
-          this._requestWaiting = true;
-        }
+        this._respondWithCacheData( function( isCachedData ) {
+          if ( !isCachedData ) {
+            self._makeFeedParserRequest();
+          }
+        } );
       }
 
     } );
