@@ -9,7 +9,7 @@
     eslint = require( "gulp-eslint" ),
     gulp = require( "gulp" ),
     htmlreplace = require( "gulp-html-replace" ),
-    runSequence = require( "run-sequence" ),
+    runSequence = require( "gulp4-run-sequence" ),
     wct = require( "web-component-tester" ).gulp.init( gulp ); // eslint-disable-line no-unused-vars
 
   gulp.task( "clean-bower", ( cb ) => {
@@ -26,7 +26,7 @@
   gulp.task( "version", () => {
     let pkg = require( "./package.json" );
 
-    gulp.src( "./rise-rss.html" )
+    return gulp.src( "./rise-rss.html" )
       .pipe( htmlreplace( {
         "version": {
           src: pkg.version,
@@ -37,7 +37,7 @@
   } );
 
   // ***** Primary Tasks ***** //
-  gulp.task( "bower-clean-install", [ "clean-bower" ], ( cb ) => {
+  gulp.task( "bower-clean-install", gulp.series( "clean-bower" ), ( cb ) => {
     return bower().on( "error", ( err ) => {
       console.log( err );
       cb();
@@ -54,11 +54,11 @@
     runSequence( "test:local", cb );
   } );
 
-  gulp.task( "build", [ "version" ], ( cb ) => {
+  gulp.task( "build", gulp.series( "version" ), ( cb ) => {
     runSequence( "lint", cb );
   } );
 
-  gulp.task( "default", [], () => {
+  gulp.task( "default", () => {
     console.log( "********************************************************************".yellow );
     console.log( "  gulp bower-clean-install: delete and re-install bower components".yellow );
     console.log( "  gulp bump: increment the version".yellow );
