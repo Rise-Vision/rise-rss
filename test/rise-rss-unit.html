@@ -55,7 +55,7 @@
     } );
 
     setup( function() {
-      server.respondWith( "GET", "https://feed-parser.risevision.com/http://feed.xml",
+      server.respondWith( "GET", "https://services2.risevision.com/feedparser/http://feed.xml",
         [ 200, header, JSON.stringify( jsonRSS ) ] );
       responded = false;
     } );
